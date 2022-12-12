@@ -4,15 +4,9 @@
 
 - 基本功能 60% 16pts
     - [ ] 畫出俄羅斯方塊的背景。 10 x 20
-    - [ ] 畫出至少7種不同方塊。
-      [Tetromino | Tetris Wiki | Fandom](https://tetris.fandom.com/wiki/Tetromino?file=Tetromino_image.png)
-      1. I
-      2. J
-      3. L
-      4. O
-      5. S
-      6. T
-      7. Z
+    - [ ] 畫出至少7種不同方塊。  
+      1.I 2.J 3.L 4.O 5.S 6.T 7.Z  
+      ![](https://learnopencv.com/wp-content/uploads/2020/11/tetris-pieces.png)
     - [ ] 會越疊愈高，並且可消除，往下掉。
     - [ ] 方塊可旋轉。
     - [ ] 遊戲畫面有邊界。
