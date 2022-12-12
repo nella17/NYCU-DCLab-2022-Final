@@ -11,7 +11,10 @@ module final_project(
   output VGA_VSYNC,
   output reg [3:0] VGA_RED,
   output reg [3:0] VGA_GREEN,
-  output reg [3:0] VGA_BLUE
+  output reg [3:0] VGA_BLUE,
+
+  input  uart_rx,
+  output uart_tx
 );
 
 wire [3:0] debounced_btn;
