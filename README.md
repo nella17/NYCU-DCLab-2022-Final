@@ -36,7 +36,7 @@ usr_btn --> Control;
 Control --> Tetris;
 
 Display -->|x, y| Tetris;
-Tetris -->|"score, type, hold, next[4]"| Display;
+Tetris -->|"score, kind, hold, next[4]"| Display;
 
 Display --> VGA;
 ```
@@ -44,9 +44,9 @@ Display --> VGA;
 ```verilog
 // 10 x 20
 wire [4:0] x, y;
-// x, y -> type
+// x, y -> kind
 wire [4*4-1:0] score; // 0xABCD BCD
-wire [2:0] type, hold, next [0:3];
+wire [2:0] kind, hold, next [0:3];
 ```
 
 ### Control
