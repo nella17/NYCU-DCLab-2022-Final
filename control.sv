@@ -53,7 +53,7 @@ module control import enum_type::*;
 
   // control
   localparam SIZE = 10;
-  reg [$clog2(SIZE):0] cnt, i;
+  reg [$clog2(SIZE):0] cnt = 0, i;
   state_type queue [0:SIZE];
 
   assign control = queue[0];

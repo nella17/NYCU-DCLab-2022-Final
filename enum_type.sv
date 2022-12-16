@@ -1,5 +1,5 @@
 package enum_type;
-  typedef enum {
+  typedef enum bit [7:0] {
     NONE = 0,
     INIT, GEN, WAIT,
     LEFT, RIGHT, DOWN, DROP,

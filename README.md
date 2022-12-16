@@ -51,7 +51,7 @@ wire [2:0] kind, hold, next [0:3];
 
 ### Control
 
-- NOEVENT
+- NONE
 - LEFT
   - btn3
   - A
