@@ -338,16 +338,15 @@ module tetris import enum_type::*;
   reg [4:0] score_carry = 0;
   always_ff @(posedge clk)
       if (~reset_n || state == INIT || ~do_clear)
-          ms_carry[0] <= 0;
+          score_carry[0] <= 0;
       else
-          ms_carry[0] <= 1;
-  generate for(gi = 0; gi < 4; gi = gi+1) begin
-      always @(posedge clk) begin
+          score_carry[0] <= 1;
+  generate for(gi = 0; gi < 4; gi = gi+1)
+      always_ff @(posedge clk)
           if (~reset_n || state == INIT)
               score[gi*4+:4] <= 0;
           else
               { score_carry[gi+1], score[gi*4+:4] } <= `BCD_ADD(score[gi*4+:4], score_carry[gi]);
-      end
-  end endgenerate
+  endgenerate
 
 endmodule
