@@ -62,11 +62,11 @@ module control(
     if (~reset_n) begin
       cnt <= 0;
       for (i = 0; i <= SIZE; i++)
-        queue[i] <= NONE;
+        queue[i] <= NOEVENT;
     end else if (ready) begin
       cnt <= cnt == 0 ? 0 : cnt - 1;
       for (i = 0; i <= SIZE; i++)
-        queue[i] <= i == SIZE ? NONE : queue[i+1];
+        queue[i] <= i == SIZE ? NOEVENT : queue[i+1];
     end else begin
       if (received) begin
         case (rx_byte)
