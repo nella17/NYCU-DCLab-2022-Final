@@ -1,4 +1,7 @@
 `timescale 1ns / 1ps
+`define N2T(i, bits, in, of, out, off) \
+    for(i = 0; i < bits; i = i+1) \
+        out[8*(off+i) +: 8] <= in[(i+of)*4 +: 4] + ((in[(i+of)*4 +: 4] < 10) ? "0" : "A"-10);
 
 module final_project import enum_type::*;
 (
@@ -15,7 +18,12 @@ module final_project import enum_type::*;
   output reg [3:0] VGA_BLUE,
 
   input  uart_rx,
-  output uart_tx
+  output uart_tx,
+
+  output LCD_RS,
+  output LCD_RW,
+  output LCD_E,
+  output [3:0] LCD_D
 );
 
   // General VGA control signals
@@ -99,6 +107,30 @@ module final_project import enum_type::*;
         endcase
       end
       else {VGA_RED, VGA_GREEN, VGA_BLUE} <= 12'h000;
+    end
+  end
+
+  reg [127:0] row_A = 0;
+  reg [127:0] row_B = 0;
+
+  LCD_module lcd0( 
+    .clk(clk),
+    .reset(~reset_n),
+    .row_A(row_A),
+    .row_B(row_B),
+    .LCD_E(LCD_E),
+    .LCD_RS(LCD_RS),
+    .LCD_RW(LCD_RW),
+    .LCD_D(LCD_D)
+  );
+
+  reg [7:0] i;
+  always_ff @(posedge clk) begin
+    if (~reset_n)
+      { row_A, row_B } <= 0;
+    else begin
+      `N2T(i, 1, tetris_state, 0, row_A, 0)
+      `N2T(i, 1, tetris_ctrl,  0, row_B, 0)
     end
   end
 
