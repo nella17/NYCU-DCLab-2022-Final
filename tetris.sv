@@ -106,12 +106,14 @@ module tetris import enum_type::*;
   wire valid;
   wire [2:0] next_kind;
   wire [1:0] next_rotate_idx;
+  wire [1:0] next_rotate_rev_idx;
   wire [3:0] left_x_offset;
   wire [3:0] right_x_offset;
   wire [4:0] down_y_offset;
   wire [219:0] gen_mask;
   wire [219:0] hold_mask;
   wire [219:0] rotate_mask;
+  wire [219:0] rotate_rev_mask;
   wire [219:0] left_mask;
   wire [219:0] right_mask;
   wire [219:0] down_mask;
@@ -146,6 +148,7 @@ module tetris import enum_type::*;
                  !(|(check_mask & placed_mask));
   assign next_kind = (curr_kind == 7) ? 1 : curr_kind + 1;
   assign next_rotate_idx = curr_rotate_idx + 1;
+  assign next_rotate_rev_idx = curr_rotate_idx - 1;
   assign left_x_offset = curr_x_offset - 1;
   assign right_x_offset = curr_x_offset + 1;
   assign down_y_offset = curr_y_offset + 1;
@@ -164,6 +167,11 @@ module tetris import enum_type::*;
                         mask[curr_kind][2][next_rotate_idx], 6'b000,
                         mask[curr_kind][3][next_rotate_idx], 6'b000,
                         180'b0} >> (curr_x_offset - 2) >> (10 * curr_y_offset);
+  assign rotate_rev_mask = {mask[curr_kind][0][next_rotate_rev_idx], 6'b000,
+                            mask[curr_kind][1][next_rotate_rev_idx], 6'b000,
+                            mask[curr_kind][2][next_rotate_rev_idx], 6'b000,
+                            mask[curr_kind][3][next_rotate_rev_idx], 6'b000,
+                            180'b0} >> (curr_x_offset - 2) >> (10 * curr_y_offset);
   assign left_mask = curr_mask << 1;
   assign right_mask = curr_mask >> 1;
   assign down_mask = curr_mask >> 10;
@@ -262,6 +270,13 @@ module tetris import enum_type::*;
         check_x_offset <= curr_x_offset;
         check_y_offset <= curr_y_offset;
         check_rotate_idx <= next_rotate_idx;
+      end
+      ROTATE_REV: begin
+        check_kind <= curr_kind;
+        check_mask <= rotate_rev_mask;
+        check_x_offset <= curr_x_offset;
+        check_y_offset <= curr_y_offset;
+        check_rotate_idx <= next_rotate_rev_idx;
       end
       LEFT: begin
         check_kind <= curr_kind;
