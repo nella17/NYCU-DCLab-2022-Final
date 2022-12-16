@@ -51,6 +51,26 @@ wire [2:0] kind, hold, next [0:3];
 
 ### Control
 
+- NONE
+- LEFT
+  - btn3
+  - A
+- RIGHT
+  - btn0
+  - D
+- DOWN
+  - W
+- DROP
+  - space
+- HOLD
+  - btn1
+  - C
+- ROTATE
+  - btn2
+  - X
+- ROTATE_REV
+  - Z
+
 ```mermaid
 graph TD;
 ```
@@ -63,27 +83,31 @@ direction LR
 [*] --> INIT
 INIT --> GEN    : ctrl
 GEN --> WAIT
-WAIT --> SPACE  : ctrl-space
-WAIT --> DOWN   : ctrl-down
-WAIT --> LEFT   : ctrl-left
-WAIT --> RIGHT  : ctrl-right
-WAIT --> ROTATE : ctrl-rot
-WAIT --> HOLD   : ctrl-hold
-WAIT --> BAR    : ctrl-bar
-SPACE --> SCHECK
+WAIT --> DROP   : ctrl-DROP
+WAIT --> DOWN   : ctrl-DOWN
+WAIT --> LEFT   : ctrl-LEFT
+WAIT --> RIGHT  : ctrl-RIGHT
+WAIT --> ROTATE : ctrl-ROTATE
+WAIT --> ROTATE_REV : ctrl-ROTATE_REV
+WAIT --> HOLD   : ctrl-HOLD
+WAIT --> BAR    : ctrl-BAR
+DROP --> PCHECK
 DOWN --> DCHECK
 LEFT --> MCHECK
 RIGHT --> MCHECK
 ROTATE --> MCHECK
+ROTATE_REV --> MCHECK
 HOLD --> HCHECK
-SCHECK --> SPACE     : valid
+BAR --> BCHECK
+PCHECK --> DROP     : valid
 state CLEAR_END <<choice>>
 state WAIT_ <<choice>>
-SCHECK --> CLEAR_END : !valid
+PCHECK --> CLEAR_END : !valid
 DCHECK --> CLEAR_END : !valid
 DCHECK --> WAIT_     : valid
 MCHECK --> WAIT_
 HCHECK --> WAIT_
+BCHECK --> WAIT_
 WAIT_ --> WAIT
 CLEAR_END --> CLEAR  : !outside
 CLEAR_END --> END    : outside

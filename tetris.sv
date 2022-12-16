@@ -6,7 +6,7 @@ module tetris(
 
   input [3:0] x,  // [0, 10)
   input [4:0] y,  // [0, 20)
-  input [2:0] ctrl,
+  input control_type ctrl,
 
   output reg [4*4-1:0] score,  // 0xABCD BCD
   output reg [2:0] kind,
@@ -97,9 +97,10 @@ module tetris(
   };
 
   typedef enum {
-    INIT, GEN, WAIT, HOLD,
-    ROTATE, LEFT, RIGHT, DOWN, BAR,
-    BCHECK, DCHECK, MCHECK, HCHECK,
+    INIT, GEN, WAIT,
+    LEFT, RIGHT, DOWN, DROP,
+    HOLD, ROTATE, ROTATE_REV, BAR,
+    PCHECK, DCHECK, MCHECK, HCHECK, BCHECK,
     CLEAR, END
   } state_type;
 
@@ -183,67 +184,60 @@ module tetris(
   always_comb begin
     next_state = INIT;
     if (reset_n) case (state)
-      INIT: begin
+      INIT:
         if (ctrl != 0)
             next_state = GEN;
         else
             next_state = INIT;
-      end
-      GEN: begin
+      GEN:
         next_state = WAIT;
-      end
-      WAIT: begin
+      WAIT:
         case (ctrl)
-          1: next_state = HOLD;
-          2: next_state = ROTATE;
-          3: next_state = LEFT;
-          4: next_state = RIGHT;
-          5: next_state = DOWN;
-          6: next_state = BAR;
-          default: next_state = WAIT;
+          LEFT:       next_state = LEFT;
+          RIGHT:      next_state = RIGHT;
+          DOWN:       next_state = DOWN;
+          DROP:       next_state = DROP;
+          HOLD:       next_state = HOLD;
+          ROTATE:     next_state = ROTATE;
+          ROTATE_REV: next_state = ROTATE_REV;
+          BAR:        next_state = BAR;
         endcase
-      end
-      HOLD: begin
+      HOLD:
         next_state = HCHECK;
-      end
-      ROTATE, LEFT, RIGHT: begin
+      LEFT, RIGHT, ROTATE, ROTATE_REV:
         next_state = MCHECK;
-      end
-      DOWN: begin
+      DOWN:
         next_state = DCHECK;
-      end
-      BAR: begin
-        next_state = BCHECK;
-      end
-      BCHECK: begin
+      DROP:
+        next_state = PCHECK;
+      PCHECK:
         if (valid)
-            next_state = BAR;
+            next_state = DROP;
         else if (outside)
             next_state = END;
         else
             next_state = CLEAR;
-      end
-      DCHECK: begin
+      DCHECK:
         if (valid)
             next_state = WAIT;
         else if (outside)
             next_state = END;
         else
             next_state = CLEAR;
-      end
-      MCHECK, HCHECK: begin
+      MCHECK, HCHECK:
         next_state = WAIT;
-      end
-      CLEAR: begin
-        if (clear_counter == 19) next_state = GEN;
-        else next_state = CLEAR;
-      end
-      END: begin
+      BCHECK:
+        next_state = WAIT;
+      CLEAR:
+        if (clear_counter == 19)
+          next_state = GEN;
+        else
+          next_state = CLEAR;
+      END:
         if (ctrl != 0)
             next_state = INIT;
         else
             next_state = END;
-      end
     endcase
   end
 
@@ -300,14 +294,14 @@ module tetris(
         check_y_offset <= curr_y_offset;
         check_rotate_idx <= curr_rotate_idx;
       end
-      DOWN, BAR: begin
+      DOWN, DROP: begin
         check_kind <= curr_kind;
         check_mask <= down_mask;
         check_x_offset <= curr_x_offset;
         check_y_offset <= down_y_offset;
         check_rotate_idx <= curr_rotate_idx;
       end
-      BCHECK, DCHECK, MCHECK, HCHECK: begin
+      PCHECK, DCHECK, MCHECK, HCHECK: begin
         if (valid) begin
           curr_kind <= check_kind;
           curr_mask <= check_mask;
@@ -316,7 +310,7 @@ module tetris(
           curr_rotate_idx <= check_rotate_idx;
           if (state == HCHECK) hold <= curr_kind;
         end
-        else if ((state == BCHECK || state == DCHECK) && !outside) begin
+        else if ((state == PCHECK || state == DCHECK) && !outside) begin
           placed_kind[2] <= placed_kind[2] | (curr_mask[199:0] & {200{curr_kind[2]}});
           placed_kind[1] <= placed_kind[1] | (curr_mask[199:0] & {200{curr_kind[1]}});
           placed_kind[0] <= placed_kind[0] | (curr_mask[199:0] & {200{curr_kind[0]}});

@@ -1,23 +1,27 @@
 `timescale 1ns / 1ps
 
+typedef enum {
+  NONE = 0,
+  LEFT, RIGHT, DOWN, DROP,
+  HOLD, ROTATE, ROTATE_REV, BAR
+} control_type;
+
 module final_project(
   input  clk,
   input  reset_n,
   input  [3:0] usr_btn,
   output [3:0] usr_led,
-  
+
   // VGA specific I/O ports
   output VGA_HSYNC,
   output VGA_VSYNC,
   output reg [3:0] VGA_RED,
   output reg [3:0] VGA_GREEN,
   output reg [3:0] VGA_BLUE,
-  
+
   input  uart_rx,
   output uart_tx
 );
-
-  wire [3:0] debounced_btn;
 
   // General VGA control signals
   wire clk_50MHz;       // 50MHz clock for VGA control
@@ -31,22 +35,13 @@ module final_project(
   reg [3:0] tetris_x;
   reg [4:0] tetris_y;
   reg inside_tetris;
-  reg [2:0] tetris_ctrl;
+  control_type tetris_ctrl;
   wire [4*4-1:0] tetris_score;
   wire [2:0] tetris_type;
   wire [2:0] tetris_hold;
   wire [2:0] tetris_next [0:3];
+  wire tetris_ready;
 
-  generate 
-    genvar i;
-    for (i = 0; i <= 3; i = i + 1) begin
-      debouncer debouncer_i(
-        .clk(clk_50MHz),
-        .btn(usr_btn[i]),
-        .debounced_btn(debounced_btn[i])
-      ); 
-    end
-  endgenerate
 
   /*clk_divider#(2) clk_divider0(
     .clk(clk),
@@ -59,10 +54,14 @@ module final_project(
     .clk_in1(clk)
   );
 
-  vga_sync_reg vs0(
-    .clk(clk_50MHz), .reset(~reset_n), .oHS(VGA_HSYNC), .oVS(VGA_VSYNC),
-    .visible(visible), .p_tick(p_tick),
-    .pixel_x(pixel_x), .pixel_y(pixel_y)
+  control control(
+    .clk(clk_50MHz),
+    .reset_n(reset_n),
+    .usr_btn(usr_btn),
+    .uart_rx(uart_rx),
+    .uart_tx(uart_tx),
+    .ready(tetris_ready),
+    .control(tetris_ctrl)
   );
 
   tetris tetris0(
@@ -74,18 +73,17 @@ module final_project(
     .score(tetris_score),
     .kind(tetris_type),
     .hold(tetris_hold),
-    .next(tetris_next)
+    .next(tetris_next),
+    .ready(tetris_ready)
+  );
+
+  vga_sync_reg vs0(
+    .clk(clk_50MHz), .reset(~reset_n), .oHS(VGA_HSYNC), .oVS(VGA_VSYNC),
+    .visible(visible), .p_tick(p_tick),
+    .pixel_x(pixel_x), .pixel_y(pixel_y)
   );
 
   assign usr_led = usr_btn;
-
-  always @(*) begin
-    if (debounced_btn[3]) tetris_ctrl = 2;  // rotate
-    else if (debounced_btn[2]) tetris_ctrl = 3;  // left
-    else if (debounced_btn[1]) tetris_ctrl = 5;  // down
-    else if (debounced_btn[0]) tetris_ctrl = 4;  // right
-    else tetris_ctrl = 0;  // do nothing
-  end
 
   always @(posedge clk_50MHz) begin
     tetris_x <= (pixel_x - 220) / 20;
