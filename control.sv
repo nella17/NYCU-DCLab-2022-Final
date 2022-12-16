@@ -42,12 +42,12 @@ module control(
   wire [3:0] debounced_btn;
 
   generate 
-    genvar i;
-    for (genvar i = 0; i <= 3; i = i + 1)
+    genvar gi;
+    for (gi = 0; gi <= 3; gi = gi + 1)
       debouncer debouncer_i(
         .clk(clk),
-        .btn(usr_btn[i]),
-        .debounced_btn(debounced_btn[i])
+        .btn(usr_btn[gi]),
+        .debounced_btn(debounced_btn[gi])
       ); 
   endgenerate
 
