@@ -1,17 +1,17 @@
 `timescale 1ns / 1ps
 
-module tb_tetris;
+module tb_tetris import enum_type::*;;
 
   reg clk;
   reg reset_n;
   reg [3:0] x;
   reg [4:0] y;
-  reg [2:0] ctrl;
+  state_type ctrl;
+  state_type state;
   wire [4*4-1:0] score;
   wire [2:0] kind;
   wire [2:0] hold;
   wire [2:0] next [0:3];
-  wire ready;
   
   tetris tetris_0(
     .clk(clk),
@@ -19,11 +19,11 @@ module tb_tetris;
     .x(x),
     .y(y),
     .ctrl(ctrl),
+    .state(state),
     .score(score),
     .kind(kind),
     .hold(hold),
-    .next(next),
-    .ready(ready)
+    .next(next)
   );
   
   always begin
@@ -33,7 +33,7 @@ module tb_tetris;
   end
    
   initial begin
-    ctrl <= 0;
+    ctrl <= NONE;
     reset_n <= 0;
     #2.1 reset_n <= 1;
   end

@@ -225,7 +225,9 @@ module tetris import enum_type::*;
       CPREP:
         next_state = CLEAR;
       CLEAR:
-        if (clear_counter == 19)
+        if (do_clear)
+          next_state = CPREP;
+        else if (clear_counter == 19)
           next_state = GEN;
         else
           next_state = CLEAR;
