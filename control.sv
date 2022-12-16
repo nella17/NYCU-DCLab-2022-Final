@@ -54,7 +54,7 @@ module control(
   // control
   localparam SIZE = 10;
   reg [$clog2(SIZE):0] cnt;
-  control_type queue [0:SIZE];
+  control_type [0:SIZE] queue;
 
   assign control = queue[0];
 
@@ -64,7 +64,7 @@ module control(
       queue <= 0;
     end else if (ready) begin
       cnt <= cnt == 0 ? 0 : cnt - 1;
-      queue <= { queue[1:SIZE], 0 };
+      queue <= { queue[1:SIZE], NONE };
     end else begin
       if (received) begin
         case (rx_byte)
