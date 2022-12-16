@@ -76,10 +76,10 @@ module control import enum_type::*;
           "D", "d": begin
             cnt <= cnt + 1; queue[cnt] <= RIGHT;
           end
-          "W", "w": begin
+          "S", "s": begin
             cnt <= cnt + 1; queue[cnt] <= DOWN;
           end
-          "S", "s", " ": begin
+          "W", "w", " ": begin
             cnt <= cnt + 1; queue[cnt] <= DROP;
           end
           "C", "c": begin
