@@ -1,12 +1,6 @@
 `timescale 1ns / 1ps
 
-typedef enum {
-  NOEVENT = 0,
-  LEFT, RIGHT, DOWN, DROP,
-  HOLD, ROTATE, ROTATE_REV, BAR
-} control_type;
-
-module tetris(
+module tetris import enum_type::* (
   input clk,
   input reset_n,
 
@@ -101,14 +95,6 @@ module tetris(
     '{ 20, 19, 19, 19 },
     '{ 20, 19, 19, 19 }
   };
-
-  typedef enum {
-    INIT, GEN, WAIT,
-    LEFT, RIGHT, DOWN, DROP,
-    HOLD, ROTATE, ROTATE_REV, BAR,
-    PCHECK, DCHECK, MCHECK, HCHECK, BCHECK,
-    CLEAR, END
-  } state_type;
 
   // declaration --------------------------------------------------
 

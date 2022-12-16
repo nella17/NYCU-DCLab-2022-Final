@@ -1,12 +1,6 @@
 `timescale 1ns / 1ps
 
-typedef enum {
-  NOEVENT = 0,
-  LEFT, RIGHT, DOWN, DROP,
-  HOLD, ROTATE, ROTATE_REV, BAR
-} control_type;
-
-module control(
+module control import enum_type::* (
   input  clk,
   input  reset_n,
   input  [3:0] usr_btn,
