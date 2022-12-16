@@ -72,7 +72,7 @@ module final_project(
     .y(tetris_y), 
     .ctrl(tetris_ctrl),
     .score(tetris_score),
-    .type(tetris_type),
+    .kind(tetris_type),
     .hold(tetris_hold),
     .next(tetris_next)
   );
