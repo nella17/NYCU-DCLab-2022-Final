@@ -4,9 +4,9 @@ module debouncer(
     input btn,
     output debounced_btn
 );
-    parameter PRESS_CLOCK_THR = 10000000; // 100ms
-    parameter LONG_PRESS_THR = 50000000; // 500ms
-    parameter CONTINUOUS_PRESS_THR = PRESS_CLOCK_THR; // 100ms
+    parameter PRESS_CLOCK_THR = 500000; // 10ms
+    parameter LONG_PRESS_THR = 25000000; // 500ms
+    parameter CONTINUOUS_PRESS_THR = 5000000; // 100ms
     
     localparam WAIT_PRESS = 0;
     localparam WAIT_LONG = 1;

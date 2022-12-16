@@ -1,375 +1,504 @@
 `timescale 1ns / 1ps
 
 module tetris(
-  input [3:0] x,
-  input [4:0] y,
-  input ctrl_valid,
-  input [1:0] ctrl,
+  input [3:0] x,  // [0, 10)
+  input [4:0] y,  // [0, 20)
+  input [2:0] ctrl,
   
   input clk,
   input reset_n,
   
-  output [2:0] kind
+  output [4*4-1:0] score,  // 0xABCD BCD
+  output reg [2:0] type,
+  output reg [2:0] hold,
+  output [2:0] next_0,
+  output [2:0] next_1,
+  output [2:0] next_2,
+  output [2:0] next_3
 );
-  // parameters
-  localparam [47:0] mask [1:7][0:3] = '{
-    '{ // 1
-       { 12'b000000000000, 
-         12'b000000001111, 
-         12'b000000000000,
-         12'b000000000000 },
-       { 12'b000000000010, 
-         12'b000000000010, 
-         12'b000000000010,
-         12'b000000000010 },
-       { 12'b000000000000, 
-         12'b000000000000, 
-         12'b000000001111,
-         12'b000000000000 },
-       { 12'b000000000100, 
-         12'b000000000100, 
-         12'b000000000100,
-         12'b000000000100 } 
-    },
-    '{ // 2
-       { 12'b000000001000, 
-         12'b000000001110, 
-         12'b000000000000,
-         12'b000000000000 },
-       { 12'b000000000110, 
-         12'b000000000100, 
-         12'b000000000100,
-         12'b000000000000 },
-       { 12'b000000000000, 
-         12'b000000001110, 
-         12'b000000000010,
-         12'b000000000000 },
-       { 12'b000000000100, 
-         12'b000000000100, 
-         12'b000000001100,
-         12'b000000000000 } 
-    },
-    '{ // 3
-       { 12'b000000000010, 
-         12'b000000001110, 
-         12'b000000000000,
-         12'b000000000000 },
-       { 12'b000000000100, 
-         12'b000000000100, 
-         12'b000000000110,
-         12'b000000000000 },
-       { 12'b000000000000, 
-         12'b000000001110, 
-         12'b000000001000,
-         12'b000000000000 },
-       { 12'b000000001100, 
-         12'b000000000100, 
-         12'b000000000100,
-         12'b000000000000 } 
-    },
-    '{ // 4
-       { 12'b000000000110, 
-         12'b000000000110, 
-         12'b000000000000,
-         12'b000000000000 },
-       { 12'b000000000110, 
-         12'b000000000110, 
-         12'b000000000000,
-         12'b000000000000 },
-       { 12'b000000000110, 
-         12'b000000000110, 
-         12'b000000000000,
-         12'b000000000000 },
-       { 12'b000000000110, 
-         12'b000000000110, 
-         12'b000000000000,
-         12'b000000000000 } 
-    },
-    '{ // 5
-       { 12'b000000000110, 
-         12'b000000001100, 
-         12'b000000000000,
-         12'b000000000000 },
-       { 12'b000000000100, 
-         12'b000000000110, 
-         12'b000000000010,
-         12'b000000000000 },
-       { 12'b000000000000, 
-         12'b000000000110, 
-         12'b000000001100,
-         12'b000000000000 },
-       { 12'b000000001000, 
-         12'b000000001100, 
-         12'b000000000100,
-         12'b000000000000 } 
-    },
-    '{ // 6
-       { 12'b000000000100, 
-         12'b000000001110, 
-         12'b000000000000,
-         12'b000000000000 },
-       { 12'b000000000100, 
-         12'b000000000110, 
-         12'b000000000100,
-         12'b000000000000 },
-       { 12'b000000000000, 
-         12'b000000001110, 
-         12'b000000000100,
-         12'b000000000000 },
-       { 12'b000000000100, 
-         12'b000000001100, 
-         12'b000000000100,
-         12'b000000000000 } 
-    },
-    '{ // 7
-       { 12'b000000001100, 
-         12'b000000000110, 
-         12'b000000000000,
-         12'b000000000000 },
-       { 12'b000000000010, 
-         12'b000000000110, 
-         12'b000000000100,
-         12'b000000000000 },
-       { 12'b000000000000, 
-         12'b000000001100, 
-         12'b000000000110,
-         12'b000000000000 },
-       { 12'b000000000100, 
-         12'b000000001100, 
-         12'b000000001000,
-         12'b000000000000 } 
-    }
-  };
+
+  // parameters --------------------------------------------------
   
-  localparam [3:0] min_x_offset [1:7][0:3] = '{
-    '{ 2, 1, 2, 0 },
-    '{ 1, 1, 1, 0 },
-    '{ 1, 1, 1, 0 },
-    '{ 1, 1, 1, 1 },
-    '{ 1, 1, 1, 0 },
-    '{ 1, 1, 1, 0 },
-    '{ 1, 1, 1, 0 }
-  };
+  reg [3:0] mask[1:7][0:3][0:3];  // [type][rotate_idx][row]
+  initial begin
+    // 1: ==================
+    mask[1][0][0] = 4'b0000;
+    mask[1][0][1] = 4'b1111;
+    mask[1][0][2] = 4'b0000;
+    mask[1][0][3] = 4'b0000;
+    // ---------------------
+    mask[1][1][0] = 4'b0010;
+    mask[1][1][1] = 4'b0010;
+    mask[1][1][2] = 4'b0010;
+    mask[1][1][3] = 4'b0010;
+    // ---------------------
+    mask[1][2][0] = 4'b0000;
+    mask[1][2][1] = 4'b0000;
+    mask[1][2][2] = 4'b1111;
+    mask[1][2][3] = 4'b0000;
+    // ---------------------
+    mask[1][3][0] = 4'b0100;
+    mask[1][3][1] = 4'b0100;
+    mask[1][3][2] = 4'b0100;
+    mask[1][3][3] = 4'b0100;
+    // 2: ==================
+    mask[2][0][0] = 4'b1000;
+    mask[2][0][1] = 4'b1110;
+    mask[2][0][2] = 4'b0000;
+    mask[2][0][3] = 4'b0000;
+    // ---------------------
+    mask[2][1][0] = 4'b0110;
+    mask[2][1][1] = 4'b0100;
+    mask[2][1][2] = 4'b0100;
+    mask[2][1][3] = 4'b0000;
+    // ---------------------
+    mask[2][2][0] = 4'b0000;
+    mask[2][2][1] = 4'b1110;
+    mask[2][2][2] = 4'b0010;
+    mask[2][2][3] = 4'b0000;
+    // ---------------------
+    mask[2][3][0] = 4'b0100;
+    mask[2][3][1] = 4'b0100;
+    mask[2][3][2] = 4'b1100;
+    mask[2][3][3] = 4'b0000;
+    // 3: ==================
+    mask[3][0][0] = 4'b0010;
+    mask[3][0][1] = 4'b1110;
+    mask[3][0][2] = 4'b0000;
+    mask[3][0][3] = 4'b0000;
+    // ---------------------
+    mask[3][1][0] = 4'b0100;
+    mask[3][1][1] = 4'b0100;
+    mask[3][1][2] = 4'b0110;
+    mask[3][1][3] = 4'b0000;
+    // ---------------------
+    mask[3][2][0] = 4'b0000;
+    mask[3][2][1] = 4'b1110;
+    mask[3][2][2] = 4'b1000;
+    mask[3][2][3] = 4'b0000;
+    // ---------------------
+    mask[3][3][0] = 4'b1100;
+    mask[3][3][1] = 4'b0100;
+    mask[3][3][2] = 4'b0100;
+    mask[3][3][3] = 4'b0000;
+    // 4: ==================
+    mask[4][0][0] = 4'b0110;
+    mask[4][0][1] = 4'b0110;
+    mask[4][0][2] = 4'b0000;
+    mask[4][0][3] = 4'b0000;
+    // ---------------------
+    mask[4][1][0] = 4'b0110;
+    mask[4][1][1] = 4'b0110;
+    mask[4][1][2] = 4'b0000;
+    mask[4][1][3] = 4'b0000;
+    // ---------------------
+    mask[4][2][0] = 4'b0110;
+    mask[4][2][1] = 4'b0110;
+    mask[4][2][2] = 4'b0000;
+    mask[4][2][3] = 4'b0000;
+    // ---------------------
+    mask[4][3][0] = 4'b0110;
+    mask[4][3][1] = 4'b0110;
+    mask[4][3][2] = 4'b0000;
+    mask[4][3][3] = 4'b0000;
+    // 5: ==================
+    mask[5][0][0] = 4'b0110;
+    mask[5][0][1] = 4'b1100;
+    mask[5][0][2] = 4'b0000;
+    mask[5][0][3] = 4'b0000;
+    // ---------------------
+    mask[5][1][0] = 4'b0100;
+    mask[5][1][1] = 4'b0110;
+    mask[5][1][2] = 4'b0010;
+    mask[5][1][3] = 4'b0000;
+    // ---------------------
+    mask[5][2][0] = 4'b0000;
+    mask[5][2][1] = 4'b0110;
+    mask[5][2][2] = 4'b1100;
+    mask[5][2][3] = 4'b0000;
+    // ---------------------
+    mask[5][3][0] = 4'b1000;
+    mask[5][3][1] = 4'b1100;
+    mask[5][3][2] = 4'b0100;
+    mask[5][3][3] = 4'b0000;
+    // 6: ==================
+    mask[6][0][0] = 4'b0100;
+    mask[6][0][1] = 4'b1110;
+    mask[6][0][2] = 4'b0000;
+    mask[6][0][3] = 4'b0000;
+    // ---------------------
+    mask[6][1][0] = 4'b0100;
+    mask[6][1][1] = 4'b0110;
+    mask[6][1][2] = 4'b0100;
+    mask[6][1][3] = 4'b0000;
+    // ---------------------
+    mask[6][2][0] = 4'b0000;
+    mask[6][2][1] = 4'b1110;
+    mask[6][2][2] = 4'b0100;
+    mask[6][2][3] = 4'b0000;
+    // ---------------------
+    mask[6][3][0] = 4'b0100;
+    mask[6][3][1] = 4'b1100;
+    mask[6][3][2] = 4'b0100;
+    mask[6][3][3] = 4'b0000;
+    // 7: ==================
+    mask[7][0][0] = 4'b1100;
+    mask[7][0][1] = 4'b0110;
+    mask[7][0][2] = 4'b0000;
+    mask[7][0][3] = 4'b0000;
+    // ---------------------
+    mask[7][1][0] = 4'b0010;
+    mask[7][1][1] = 4'b0110;
+    mask[7][1][2] = 4'b0100;
+    mask[7][1][3] = 4'b0000;
+    // ---------------------
+    mask[7][2][0] = 4'b0000;
+    mask[7][2][1] = 4'b1100;
+    mask[7][2][2] = 4'b0110;
+    mask[7][2][3] = 4'b0000;
+    // ---------------------
+    mask[7][3][0] = 4'b0100;
+    mask[7][3][1] = 4'b1100;
+    mask[7][3][2] = 4'b1000;
+    mask[7][3][3] = 4'b0000;
+  end
   
-  localparam [3:0] max_x_offset [1:7][0:3] = '{
-    '{ 8, 10, 8, 9 },
-    '{ 8, 9, 8, 8 },
-    '{ 8, 9, 8, 8 },
-    '{ 9, 9, 9, 9 },
-    '{ 8, 9, 8, 8 },
-    '{ 8, 9, 8, 8 },
-    '{ 8, 9, 8, 8 }
-  };
+  reg [1:0] min_x_offset [1:7][0:3];  // [type][rotate_idx]
+  initial begin
+    // --------------------
+    min_x_offset[1][0] = 2;
+    min_x_offset[1][1] = 0;
+    min_x_offset[1][2] = 2;
+    min_x_offset[1][3] = 1;
+    // --------------------
+    min_x_offset[2][0] = 2;
+    min_x_offset[2][1] = 1;
+    min_x_offset[2][2] = 2;
+    min_x_offset[2][3] = 2;
+    // --------------------
+    min_x_offset[3][0] = 2;
+    min_x_offset[3][1] = 1;
+    min_x_offset[3][2] = 2;
+    min_x_offset[3][3] = 2;
+    // --------------------
+    min_x_offset[4][0] = 1;
+    min_x_offset[4][1] = 1;
+    min_x_offset[4][2] = 1;
+    min_x_offset[4][3] = 1;
+    // --------------------
+    min_x_offset[5][0] = 2;
+    min_x_offset[5][1] = 1;
+    min_x_offset[5][2] = 2;
+    min_x_offset[5][3] = 2;
+    // --------------------
+    min_x_offset[6][0] = 2;
+    min_x_offset[6][1] = 1;
+    min_x_offset[6][2] = 2;
+    min_x_offset[6][3] = 2;
+    // --------------------
+    min_x_offset[7][0] = 2;
+    min_x_offset[7][1] = 1;
+    min_x_offset[7][2] = 2;
+    min_x_offset[7][3] = 2;
+  end
   
-  localparam [4:0] max_y_offset [1:7][0:3] = '{
-    '{ 19, 17, 18, 17 },
-    '{ 19, 18, 18, 18 },
-    '{ 19, 18, 18, 18 },
-    '{ 19, 19, 19, 19 },
-    '{ 19, 18, 18, 18 },
-    '{ 19, 18, 18, 18 },
-    '{ 19, 18, 18, 18 }
-  };
+  reg [3:0] max_x_offset [1:7][0:3];  // [type][rotate_idx]
+  initial begin
+    // ---------------------
+    max_x_offset[1][0] =  8;
+    max_x_offset[1][1] =  9;
+    max_x_offset[1][2] =  8;
+    max_x_offset[1][3] = 10;
+    // ---------------------
+    max_x_offset[2][0] =  9;
+    max_x_offset[2][1] =  9;
+    max_x_offset[2][2] =  9;
+    max_x_offset[2][3] = 10;
+    // ---------------------
+    max_x_offset[3][0] =  9;
+    max_x_offset[3][1] =  9;
+    max_x_offset[3][2] =  9;
+    max_x_offset[3][3] = 10;
+    // ---------------------
+    max_x_offset[4][0] =  9;
+    max_x_offset[4][1] =  9;
+    max_x_offset[4][2] =  9;
+    max_x_offset[4][3] =  9;
+    // ---------------------
+    max_x_offset[5][0] =  9;
+    max_x_offset[5][1] =  9;
+    max_x_offset[5][2] =  9;
+    max_x_offset[5][3] = 10;
+    // ---------------------
+    max_x_offset[6][0] =  9;
+    max_x_offset[6][1] =  9;
+    max_x_offset[6][2] =  9;
+    max_x_offset[6][3] = 10;
+    // ---------------------
+    max_x_offset[7][0] =  9;
+    max_x_offset[7][1] =  9;
+    max_x_offset[7][2] =  9;
+    max_x_offset[7][3] = 10;
+  end
   
-  // internal signals
-  enum { INIT, NEXT, GEN_NEXT, GEN, END, WAIT,
-         ROTATE_LOAD, ROTATE_NEXT, ROTATE, 
-         LEFT_NEXT, LEFT, RIGHT_NEXT, RIGHT,
-         DOWN_NEXT, DOWN, CLEAR_PREP, CLEAR } state;
-  reg [209:0] placed_mask;
-  reg [199:0] placed_kind [2:0];
-  reg [209:0] curr_mask;
-  reg [2:0] curr_kind;
+  reg [4:0] max_y_offset [1:7][0:3];  // [type][rotate_idx]
+  initial begin
+    // ---------------------
+    max_y_offset[1][0] = 20;
+    max_y_offset[1][1] = 18;
+    max_y_offset[1][2] = 19;
+    max_y_offset[1][3] = 18;
+    // ---------------------
+    max_y_offset[2][0] = 20;
+    max_y_offset[2][1] = 19;
+    max_y_offset[2][2] = 19;
+    max_y_offset[2][3] = 19;
+    // ---------------------
+    max_y_offset[3][0] = 20;
+    max_y_offset[3][1] = 19;
+    max_y_offset[3][2] = 19;
+    max_y_offset[3][3] = 19;
+    // ---------------------
+    max_y_offset[4][0] = 20;
+    max_y_offset[4][1] = 20;
+    max_y_offset[4][2] = 20;
+    max_y_offset[4][3] = 20;
+    // ---------------------
+    max_y_offset[5][0] = 20;
+    max_y_offset[5][1] = 19;
+    max_y_offset[5][2] = 19;
+    max_y_offset[5][3] = 19;
+    // ---------------------
+    max_y_offset[6][0] = 20;
+    max_y_offset[6][1] = 19;
+    max_y_offset[6][2] = 19;
+    max_y_offset[6][3] = 19;
+    // ---------------------
+    max_y_offset[7][0] = 20;
+    max_y_offset[7][1] = 19;
+    max_y_offset[7][2] = 19;
+    max_y_offset[7][3] = 19;
+  end
+  
+  localparam S_INIT = 0,
+             S_GEN = 1,
+             S_WAIT = 2,
+             S_HOLD = 3,
+             S_ROTATE = 4,
+             S_LEFT = 5,
+             S_RIGHT = 6,
+             S_DOWN = 7,
+             S_BAR = 8,
+             S_BCHECK = 9,
+             S_DCHECK = 10,
+             S_MCHECK = 11,
+             S_HCHECK = 12,
+             S_CLEAR = 13,
+             S_END = 14;
+             
+  // declaration --------------------------------------------------
+    
+  // nets
   wire [7:0] read_addr;
+  wire [219:0] placed_mask;
+  wire outside;
+  wire valid;
+  wire [2:0] next_type;
+  wire [1:0] next_rotate_idx;
+  wire [3:0] left_x_offset;
+  wire [3:0] right_x_offset;
+  wire [4:0] down_y_offset;
+  wire [219:0] gen_mask;
+  wire [219:0] hold_mask;
+  wire [219:0] rotate_mask;
+  wire [219:0] left_mask;
+  wire [219:0] right_mask;
+  wire [219:0] down_mask;
+  reg [3:0] next_state;
   
-  // GEN/ROTATE/LEFT/RIGHT/DOWN
-  reg [1:0] rotate_idx;
-  reg [3:0] x_offset;
-  reg [4:0] y_offset;
+  // registers
+  reg [3:0] state = S_INIT;
+  reg [199:0] placed_type [2:0];
+  reg [2:0] curr_type;
+  reg [219:0] curr_mask;
+  reg [3:0] curr_x_offset;
+  reg [4:0] curr_y_offset;
+  reg [1:0] curr_rotate_idx;
+  reg [2:0] check_type;
+  reg [219:0] check_mask;
+  reg [3:0] check_x_offset;
+  reg [4:0] check_y_offset;
+  reg [1:0] check_rotate_idx;
   
-  // GEN/ROTATE
-  reg [251:0] extended_offset_mask;
-  wire [209:0] offset_mask;
+  // comb logic --------------------------------------------------
   
-  // ROTATE/LEFT/RIGHT/DOWN
-  reg [1:0] next_rotate_idx;
-  reg [3:0] next_x_offset;
-  reg [4:0] next_y_offset;
-  reg [209:0] next_mask;
-  wire valid_x_min_offset;
-  wire valid_x_max_offset;
-  wire valid_y_max_offset;
-  wire valid_offset;
-  wire overlapped;
+  assign read_addr = (19 - y) * 10 + (9 - x);
+  assign placed_mask = {20'b0, placed_type[2] | placed_type[1] | placed_type[0]};
+  assign outside = |curr_mask[219:200];
+  assign valid = min_x_offset[check_type][check_rotate_idx] <= check_x_offset &&
+                 check_x_offset <= max_x_offset[check_type][check_rotate_idx] &&
+                 check_y_offset <= max_y_offset[check_type][check_rotate_idx] &&
+                 !(|(check_mask & placed_mask));
+  assign next_type = (curr_type == 7) ? 1 : curr_type + 1;
+  assign next_rotate_idx = curr_rotate_idx + 1;
+  assign left_x_offset = curr_x_offset - 1;
+  assign right_x_offset = curr_x_offset + 1;
+  assign down_y_offset = curr_y_offset + 1;
+  assign gen_mask = {3'b000, mask[next_type][0][0], 3'b000,
+                     3'b000, mask[next_type][0][1], 3'b000,
+                     3'b000, mask[next_type][0][2], 3'b000,
+                     3'b000, mask[next_type][0][3], 3'b000,
+                     180'b0};
+  assign hold_mask = {mask[hold][0][0], 6'b000,
+                      mask[hold][0][1], 6'b000,
+                      mask[hold][0][2], 6'b000,
+                      mask[hold][0][3], 6'b000,
+                      180'b0} >> (curr_x_offset - 2) >> (10 * curr_y_offset);
+  assign rotate_mask = {mask[curr_type][next_rotate_idx][0], 6'b000,
+                        mask[curr_type][next_rotate_idx][1], 6'b000,
+                        mask[curr_type][next_rotate_idx][2], 6'b000,
+                        mask[curr_type][next_rotate_idx][3], 6'b000,
+                        180'b0} >> (curr_x_offset - 2) >> (10 * curr_y_offset);
+  assign left_mask = curr_mask << 1;
+  assign right_mask = curr_mask >> 1;
+  assign down_mask = curr_mask >> 10;
   
-  // CLEAR
-  reg [199:0] tmp_placed_mask;
-  reg [4:0] clear_row;
-  wire [209:0] clear_mask;
-  
-  assign kind = curr_mask[read_addr] ? curr_kind : { placed_kind[2][read_addr], placed_kind[1][read_addr], placed_kind[0][read_addr] };
-  
-  assign read_addr = (8'd19 - y) * 8'd10 + (8'd9 - x);
-  
-  assign valid_x_min_offset = min_x_offset[curr_kind][next_rotate_idx] <= next_x_offset;
-  assign valid_x_max_offset = next_x_offset <= max_x_offset[curr_kind][next_rotate_idx];
-  assign valid_y_max_offset = next_y_offset <= max_y_offset[curr_kind][next_rotate_idx];
-  assign valid_offset = valid_x_min_offset & valid_x_max_offset & valid_y_max_offset;
-  assign overlapped = |(placed_mask & next_mask);
-  
-  assign offset_mask = { extended_offset_mask[20*12+2 +: 10],
-                         extended_offset_mask[19*12+2 +: 10], 
-                         extended_offset_mask[18*12+2 +: 10],
-                         extended_offset_mask[17*12+2 +: 10],
-                         extended_offset_mask[16*12+2 +: 10],
-                         extended_offset_mask[15*12+2 +: 10],
-                         extended_offset_mask[14*12+2 +: 10],
-                         extended_offset_mask[13*12+2 +: 10],
-                         extended_offset_mask[12*12+2 +: 10],
-                         extended_offset_mask[11*12+2 +: 10],
-                         extended_offset_mask[10*12+2 +: 10],
-                         extended_offset_mask[ 9*12+2 +: 10],
-                         extended_offset_mask[ 8*12+2 +: 10],
-                         extended_offset_mask[ 7*12+2 +: 10],
-                         extended_offset_mask[ 6*12+2 +: 10],
-                         extended_offset_mask[ 5*12+2 +: 10],
-                         extended_offset_mask[ 4*12+2 +: 10],
-                         extended_offset_mask[ 3*12+2 +: 10],
-                         extended_offset_mask[ 2*12+2 +: 10],
-                         extended_offset_mask[ 1*12+2 +: 10],
-                         extended_offset_mask[ 0*12+2 +: 10] };
-                         
-  assign clear_mask = {210{1'b1}} << (8'd10 * clear_row);
-  
-  always @(posedge clk) begin
-    if (~reset_n) begin
-      state <= INIT;
-    end 
-    else case (state)
-      INIT: begin
-        placed_mask <= 0;
-        placed_kind[2] <= 0;
-        placed_kind[1] <= 0;
-        placed_kind[0] <= 0;
-        curr_mask <= 0;
-        curr_kind <= 1;
-        if (ctrl_valid) state <= NEXT;
+  always @(*) begin
+    next_state = S_INIT;
+    if (reset_n) case (state)
+      S_INIT: begin
+        if (ctrl != 0) next_state = S_GEN;
+        else next_state = S_INIT;
       end
-      NEXT: begin
-        rotate_idx <= 0;
-        x_offset <= 5;
-        y_offset <= 0;
-        extended_offset_mask <= ({ mask[curr_kind][0], {204{1'b0}} } << 5);
-        state <= GEN_NEXT;
+      S_GEN: begin
+        next_state = S_WAIT;
       end
-      END: if (ctrl_valid) state <= INIT;
-      GEN_NEXT: begin
-        next_mask <= offset_mask;
-        state <= GEN;
+      S_WAIT: begin
+        case (ctrl)
+          1: next_state = S_HOLD;
+          2: next_state = S_ROTATE;
+          3: next_state = S_LEFT;
+          4: next_state = S_RIGHT;
+          5: next_state = S_DOWN;
+          6: next_state = S_BAR;
+          default: next_state = S_WAIT;
+        endcase
       end
-      GEN: begin
-        if (overlapped | |(placed_mask[209:200])) state <= END;
-        else begin
-          curr_mask <= next_mask;
-          state <= WAIT;
-        end
+      S_HOLD: begin
+        next_state = S_HCHECK;
       end
-      WAIT: begin
-        if (ctrl_valid) begin
-          case (ctrl)
-            2'b11: state <= ROTATE_LOAD;
-            2'b10: state <= LEFT_NEXT;
-            2'b01: state <= DOWN_NEXT;
-            2'b00: state <= RIGHT_NEXT;
-          endcase
-        end
+      S_ROTATE, S_LEFT, S_RIGHT: begin
+        next_state = S_MCHECK;
       end
-      ROTATE_LOAD: begin
-        extended_offset_mask <= ({ mask[curr_kind][rotate_idx + 1], {204{1'b0}} } << x_offset) >> (12 * y_offset);
-        state <= ROTATE_NEXT;
+      S_DOWN: begin
+        next_state = S_DCHECK;
       end
-      ROTATE_NEXT: begin
-        next_rotate_idx <= rotate_idx + 1;
-        next_x_offset <= x_offset;
-        next_y_offset <= y_offset;
-        next_mask <= offset_mask;
-        state <= ROTATE;
+      S_BAR: begin
+        next_state = S_BCHECK;
       end
-      ROTATE: begin
-        if (~overlapped & valid_offset) begin
-          curr_mask <= next_mask;
-          rotate_idx <= next_rotate_idx;
-        end
-        state <= WAIT;
+      S_BCHECK: begin
+        if (valid) next_state = S_BAR;
+        else if (outside) next_state = S_END;
+        else next_state = S_CLEAR;
       end
-      LEFT_NEXT: begin
-        next_rotate_idx <= rotate_idx;
-        next_x_offset <= x_offset + 1;
-        next_mask <= (curr_mask << 1);
-        state <= LEFT;
+      S_DCHECK: begin
+        if (valid) next_state = S_WAIT;
+        else if (outside) next_state = S_END;
+        else next_state = S_CLEAR;
       end
-      LEFT: begin
-        if (~overlapped & valid_x_max_offset) begin
-          curr_mask <= next_mask;
-          x_offset <= next_x_offset;
-        end
-        state <= WAIT;
+      S_MCHECK, S_HCHECK: begin
+        next_state = S_WAIT;
       end
-      RIGHT_NEXT: begin
-        next_rotate_idx <= rotate_idx;
-        next_x_offset <= x_offset - 1;
-        next_mask <= (curr_mask >> 1);
-        state <= RIGHT;
+      S_CLEAR: begin
+        next_state = S_GEN;
       end
-      RIGHT: begin
-        if (~overlapped & valid_x_min_offset) begin
-          curr_mask <= next_mask;
-          x_offset <= next_x_offset;
-        end
-        state <= WAIT;
-      end
-      DOWN_NEXT: begin
-        next_rotate_idx <= rotate_idx;
-        next_y_offset <= y_offset + 1;
-        next_mask <= (curr_mask >> 10);
-        state <= DOWN;
-      end
-      DOWN: begin
-        if (~overlapped & valid_y_max_offset) begin
-          curr_mask <= next_mask;
-          y_offset <= next_y_offset;
-          state <= WAIT;
-        end
-        else begin
-          placed_mask <= placed_mask | curr_mask;
-          placed_kind[2] <= placed_kind[2] | (curr_mask[199:0] & {200{curr_kind[2]}});
-          placed_kind[1] <= placed_kind[1] | (curr_mask[199:0] & {200{curr_kind[1]}});
-          placed_kind[0] <= placed_kind[0] | (curr_mask[199:0] & {200{curr_kind[0]}});
-          state <= CLEAR_PREP;
-        end
-      end
-      CLEAR_PREP: begin
-          tmp_placed_mask <= placed_mask;
-          clear_row <= 0;
-          state <= CLEAR;
-      end
-      CLEAR: begin
-        if (&tmp_placed_mask[9:0]) begin
-          placed_mask    <= (placed_mask    & ~clear_mask) | ((placed_mask    >> 10) & clear_mask);
-          placed_kind[2] <= (placed_kind[2] & ~clear_mask) | ((placed_kind[2] >> 10) & clear_mask);
-          placed_kind[1] <= (placed_kind[1] & ~clear_mask) | ((placed_kind[1] >> 10) & clear_mask);
-          placed_kind[0] <= (placed_kind[0] & ~clear_mask) | ((placed_kind[0] >> 10) & clear_mask);
-          state <= CLEAR_PREP;
-        end
-        else begin
-          tmp_placed_mask <= (tmp_placed_mask >> 10);
-          clear_row <= clear_row + 1;
-          if (clear_row == 19) begin
-            curr_kind <= (curr_kind == 7) ? 1 : (curr_kind + 1);
-            state <= NEXT;
-          end
-        end
+      S_END: begin
+        if (ctrl != 0) next_state = S_INIT;
+        else next_state = S_END;
       end
     endcase
   end
+  
+  // seq logic --------------------------------------------------
+  
+  always @(posedge clk) begin
+    if (curr_mask[read_addr]) type <= curr_type;
+    else type <= {placed_type[2][read_addr], placed_type[1][read_addr], placed_type[0][read_addr]};
+  end
+  
+  always @(posedge clk) begin
+    state <= next_state;
+  end
+  
+  always @(posedge clk) begin
+    case (state)
+      S_INIT: begin
+        hold <= 0;
+        placed_type[2] <= 0;
+        placed_type[1] <= 0;
+        placed_type[0] <= 0;
+        curr_type <= 0;
+      end
+      S_GEN: begin
+        curr_type <= next_type;
+        curr_mask <= gen_mask;
+        curr_x_offset <= 5;
+        curr_y_offset <= 0;
+        curr_rotate_idx <= 0;
+      end
+      S_HOLD: begin
+        check_type <= hold;
+        check_mask <= hold_mask;
+        check_x_offset <= curr_x_offset;
+        check_y_offset <= curr_y_offset;
+        check_rotate_idx <= 0;
+      end
+      S_ROTATE: begin
+        check_type <= curr_type;
+        check_mask <= rotate_mask;
+        check_x_offset <= curr_x_offset;
+        check_y_offset <= curr_y_offset;
+        check_rotate_idx <= next_rotate_idx;
+      end
+      S_LEFT: begin
+        check_type <= curr_type;
+        check_mask <= left_mask;
+        check_x_offset <= left_x_offset;
+        check_y_offset <= curr_y_offset;
+        check_rotate_idx <= curr_rotate_idx;
+      end
+      S_RIGHT: begin
+        check_type <= curr_type;
+        check_mask <= right_mask;
+        check_x_offset <= right_x_offset;
+        check_y_offset <= curr_y_offset;
+        check_rotate_idx <= curr_rotate_idx;
+      end
+      S_DOWN, S_BAR: begin
+        check_type <= curr_type;
+        check_mask <= down_mask;
+        check_x_offset <= curr_x_offset;
+        check_y_offset <= down_y_offset;
+        check_rotate_idx <= curr_rotate_idx;
+      end
+      S_BCHECK, S_DCHECK, S_MCHECK, S_HCHECK: begin
+        if (valid) begin
+          curr_type <= check_type;
+          curr_mask <= check_mask;
+          curr_x_offset <= check_x_offset;
+          curr_y_offset <= check_y_offset;
+          curr_rotate_idx <= check_rotate_idx;
+          if (state == S_HCHECK) hold <= curr_type;
+        end
+        else if ((state == S_BCHECK || state == S_DCHECK) && !outside) begin
+          placed_type[2] <= placed_type[2] | (curr_mask[199:0] & {200{curr_type[2]}});
+          placed_type[1] <= placed_type[1] | (curr_mask[199:0] & {200{curr_type[1]}});
+          placed_type[0] <= placed_type[0] | (curr_mask[199:0] & {200{curr_type[0]}});
+        end
+      end
+      S_CLEAR: begin
+      end
+    endcase
+  end
+  
 endmodule
