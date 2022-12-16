@@ -95,11 +95,11 @@ module control import enum_type::*;
       end if (debounced_btn[0]) begin
         cnt <= cnt + 1; queue[cnt] <= RIGHT;
       end if (debounced_btn[1]) begin
-        cnt <= cnt + 1; queue[cnt] <= HOLD;
+        cnt <= cnt + 1; queue[cnt] <= DOWN;
       end if (debounced_btn[2]) begin
-        cnt <= cnt + 1; queue[cnt] <= ROTATE;
-      end if (debounced_btn[3]) begin
         cnt <= cnt + 1; queue[cnt] <= LEFT;
+      end if (debounced_btn[3]) begin
+        cnt <= cnt + 1; queue[cnt] <= ROTATE;
       end
     end
   end
