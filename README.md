@@ -72,6 +72,8 @@ wire [2:0] kind, hold, next [0:3];
 - ROTATE_REV
   - Z
 - BAR
+  - B
+
 
 ### Tetris
 
@@ -112,8 +114,9 @@ CPREP --> CLEAR
 CLEAR --> CPREP
 CLEAR --> GEN        : !ctrl-BAR
 CLEAR --> BAR        : ctrl-BAR
-BCHECK --> GEN       : valid
 BCHECK --> END       : !valid
+BCHECK --> BAR       : ctrl-BAR
+BCHECK --> GEN       : valid && !ctrl-BAR
 ```
 
 ### Display
