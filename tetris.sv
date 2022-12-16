@@ -11,7 +11,8 @@ module tetris(
   output reg [4*4-1:0] score,  // 0xABCD BCD
   output reg [2:0] kind,
   output reg [2:0] hold,
-  output reg [2:0] next [0:3]
+  output reg [2:0] next [0:3],
+  output ready
 );
 
   // parameters --------------------------------------------------
@@ -120,6 +121,8 @@ module tetris(
   wire [219:0] left_mask;
   wire [219:0] right_mask;
   wire [219:0] down_mask;
+  wire [199:0] new_placed_kind [2:0];
+  wire do_clear;
   state_type next_state;
 
   // registers
@@ -135,9 +138,13 @@ module tetris(
   reg [3:0] check_x_offset;
   reg [4:0] check_y_offset;
   reg [1:0] check_rotate_idx;
+  reg [199:0] test_mask;
+  reg [199:0] clear_mask;
+  reg [4:0] clear_counter;
 
   // comb logic --------------------------------------------------
 
+  assign ready = (state == WAIT);
   assign read_addr = (19 - y) * 10 + (9 - x);
   assign placed_mask = {20'b0, placed_kind[2] | placed_kind[1] | placed_kind[0]};
   assign outside = |curr_mask[219:200];
@@ -168,6 +175,10 @@ module tetris(
   assign left_mask = curr_mask << 1;
   assign right_mask = curr_mask >> 1;
   assign down_mask = curr_mask >> 10;
+  assign new_placed_kind[2] = (placed_kind[2] & ~clear_mask) | ((placed_kind[2] >> 10) & clear_mask);
+  assign new_placed_kind[1] = (placed_kind[1] & ~clear_mask) | ((placed_kind[1] >> 10) & clear_mask);
+  assign new_placed_kind[0] = (placed_kind[0] & ~clear_mask) | ((placed_kind[0] >> 10) & clear_mask);
+  assign do_clear = &test_mask[9:0];
 
   always_comb begin
     next_state = INIT;
@@ -224,7 +235,8 @@ module tetris(
         next_state = WAIT;
       end
       CLEAR: begin
-        next_state = GEN;
+        if (clear_counter == 19) next_state = GEN;
+        else next_state = CLEAR;
       end
       END: begin
         if (ctrl != 0)
@@ -308,9 +320,23 @@ module tetris(
           placed_kind[2] <= placed_kind[2] | (curr_mask[199:0] & {200{curr_kind[2]}});
           placed_kind[1] <= placed_kind[1] | (curr_mask[199:0] & {200{curr_kind[1]}});
           placed_kind[0] <= placed_kind[0] | (curr_mask[199:0] & {200{curr_kind[0]}});
+          test_mask <= placed_mask;
+          clear_mask <= {200{1'b1}};
+          clear_counter <= 0;
         end
       end
       CLEAR: begin
+        test_mask <= test_mask >> 10;
+        clear_mask <= clear_mask << 10;
+        if (do_clear) begin
+          placed_kind[2] <= new_placed_kind[2];
+          placed_kind[1] <= new_placed_kind[1];
+          placed_kind[0] <= new_placed_kind[0];
+          test_mask <= new_placed_kind[2] | new_placed_kind[1] | new_placed_kind[0];
+          clear_mask <= {200{1'b1}};
+          clear_counter <= 0;
+        end
+        else clear_counter <= clear_counter + 1;
       end
     endcase
   end
