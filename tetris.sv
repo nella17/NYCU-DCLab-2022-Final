@@ -212,16 +212,18 @@ module tetris import enum_type::*;
         else if (outside)
             next_state = END;
         else
-            next_state = CLEAR;
+            next_state = CPREP;
       DCHECK:
         if (valid)
             next_state = WAIT;
         else if (outside)
             next_state = END;
         else
-            next_state = CLEAR;
+            next_state = CPREP;
       MCHECK, HCHECK:
         next_state = WAIT;
+      CPREP:
+        next_state = CLEAR;
       CLEAR:
         if (clear_counter == 19)
           next_state = GEN;
