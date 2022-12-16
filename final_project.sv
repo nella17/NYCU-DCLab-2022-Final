@@ -30,7 +30,7 @@ module final_project import enum_type::*;
   reg [3:0] tetris_x;
   reg [4:0] tetris_y;
   reg inside_tetris;
-  control_type tetris_ctrl;
+  state_type tetris_ctrl;
   wire [4*4-1:0] tetris_score;
   wire [2:0] tetris_type;
   wire [2:0] tetris_hold;

@@ -7,7 +7,7 @@ module tetris import enum_type::*;
 
   input [3:0] x,  // [0, 10)
   input [4:0] y,  // [0, 20)
-  input control_type ctrl,
+  input state_type ctrl,
 
   output reg [4*4-1:0] score,  // 0xABCD BCD
   output reg [2:0] kind,
@@ -178,23 +178,17 @@ module tetris import enum_type::*;
     next_state = INIT;
     if (reset_n) case (state)
       INIT:
-        if (ctrl != NOEVENT)
+        if (ctrl != NONE)
             next_state = GEN;
         else
             next_state = INIT;
       GEN:
         next_state = WAIT;
       WAIT:
-        case (ctrl)
-          LEFT:       next_state = LEFT;
-          RIGHT:      next_state = RIGHT;
-          DOWN:       next_state = DOWN;
-          DROP:       next_state = DROP;
-          HOLD:       next_state = HOLD;
-          ROTATE:     next_state = ROTATE;
-          ROTATE_REV: next_state = ROTATE_REV;
-          BAR:        next_state = BAR;
-        endcase
+        if (ctrl != NONE)
+          next_state = ctrl;
+        else
+          next_state = WAIT;
       HOLD:
         next_state = HCHECK;
       LEFT, RIGHT, ROTATE, ROTATE_REV:
@@ -227,7 +221,7 @@ module tetris import enum_type::*;
         else
           next_state = CLEAR;
       END:
-        if (ctrl != NOEVENT)
+        if (ctrl != NONE)
             next_state = INIT;
         else
             next_state = END;

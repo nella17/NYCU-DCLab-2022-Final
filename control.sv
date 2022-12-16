@@ -8,7 +8,7 @@ module control import enum_type::*;
   input  uart_rx,
   output uart_tx,
   input  ready,
-  output control_type control
+  output state_type control
 );
 
   // uart
@@ -62,11 +62,11 @@ module control import enum_type::*;
     if (~reset_n) begin
       cnt <= 0;
       for (i = 0; i <= SIZE; i++)
-        queue[i] <= NOEVENT;
+        queue[i] <= NONE;
     end else if (ready) begin
       cnt <= cnt == 0 ? 0 : cnt - 1;
       for (i = 0; i <= SIZE; i++)
-        queue[i] <= i == SIZE ? NOEVENT : queue[i+1];
+        queue[i] <= i == SIZE ? NONE : queue[i+1];
     end else begin
       if (received) begin
         case (rx_byte)
