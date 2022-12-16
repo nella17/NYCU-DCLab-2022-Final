@@ -35,10 +35,7 @@ module final_project(
   wire [4*4-1:0] tetris_score;
   wire [2:0] tetris_type;
   wire [2:0] tetris_hold;
-  wire [2:0] tetris_next_0;
-  wire [2:0] tetris_next_1;
-  wire [2:0] tetris_next_2;
-  wire [2:0] tetris_next_3;
+  wire [2:0] tetris_next [0:3];
 
   generate 
     genvar i;
@@ -69,18 +66,15 @@ module final_project(
   );
 
   tetris tetris0(
+    .clk(clk_50MHz),
+    .reset_n(reset_n),
     .x(tetris_x), 
     .y(tetris_y), 
     .ctrl(tetris_ctrl),
-    .clk(clk_50MHz),
-    .reset_n(reset_n),
     .score(tetris_score),
     .type(tetris_type),
     .hold(tetris_hold),
-    .next_0(tetris_next_0),
-    .next_1(tetris_next_1),
-    .next_2(tetris_next_2),
-    .next_3(tetris_next_3)
+    .next(tetris_next)
   );
 
   assign usr_led = usr_btn;

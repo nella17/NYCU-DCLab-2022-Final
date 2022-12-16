@@ -11,7 +11,7 @@ module tetris(
   output reg [4*4-1:0] score,  // 0xABCD BCD
   output reg [2:0] kind,
   output reg [2:0] hold,
-  output [2:0] next [0:3]
+  output reg [2:0] next [0:3]
 );
 
   // parameters --------------------------------------------------
