@@ -110,8 +110,10 @@ module final_project import enum_type::*;
     end
   end
 
-  reg [127:0] row_A = 0;
-  reg [127:0] row_B = 0;
+  localparam row_init = "????????????????";
+
+  reg [127:0] row_A = row_init;
+  reg [127:0] row_B = row_init;
 
   LCD_module lcd0( 
     .clk(clk),
@@ -129,7 +131,7 @@ module final_project import enum_type::*;
   wire [7:0] nc = tetris_ctrl;
   always_ff @(posedge clk) begin
     if (~reset_n)
-      { row_A, row_B } <= 0;
+      { row_A, row_B } <= { row_init, row_init };
     else begin
       `N2T(i, 2, ns, 0, row_A, 0)
       `N2T(i, 2, nc, 0, row_B, 0)
