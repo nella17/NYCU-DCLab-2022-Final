@@ -116,7 +116,7 @@ module final_project import enum_type::*;
   reg [127:0] row_B = row_init;
 
   LCD_module lcd0( 
-    .clk(clk),
+    .clk(clk_50MHz),
     .reset(~reset_n),
     .row_A(row_A),
     .row_B(row_B),
@@ -129,7 +129,7 @@ module final_project import enum_type::*;
   reg [7:0] i;
   wire [7:0] ns = tetris_state;
   wire [7:0] nc = tetris_ctrl;
-  always_ff @(posedge clk) begin
+  always_ff @(posedge clk_50MHz) begin
     if (~reset_n)
       { row_A, row_B } <= { row_init, row_init };
     else begin
