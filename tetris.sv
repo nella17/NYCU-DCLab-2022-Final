@@ -9,11 +9,11 @@ module tetris import enum_type::*;
   input [4:0] y,  // [0, 20)
   input state_type ctrl,
 
+  output state_type state,
   output reg [4*4-1:0] score,  // 0xABCD BCD
   output reg [2:0] kind,
   output reg [2:0] hold,
-  output reg [2:0] next [0:3],
-  output ready
+  output reg [2:0] next [0:3]
 );
 
   // parameters --------------------------------------------------
@@ -120,7 +120,6 @@ module tetris import enum_type::*;
   state_type next_state;
 
   // registers
-  state_type state = INIT;
   reg [199:0] placed_kind [2:0];
   reg [2:0] curr_kind;
   reg [219:0] curr_mask;
@@ -138,7 +137,6 @@ module tetris import enum_type::*;
 
   // comb logic --------------------------------------------------
 
-  assign ready = (state == WAIT);
   assign read_addr = (19 - y) * 10 + (9 - x);
   assign placed_mask = {20'b0, placed_kind[2] | placed_kind[1] | placed_kind[0]};
   assign outside = |curr_mask[219:200];

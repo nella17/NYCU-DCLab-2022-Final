@@ -7,7 +7,7 @@ module control import enum_type::*;
   input  [3:0] usr_btn,
   input  uart_rx,
   output uart_tx,
-  input  ready,
+  input  state_type state,
   output state_type control
 );
 
@@ -63,7 +63,7 @@ module control import enum_type::*;
       cnt <= 0;
       for (i = 0; i <= SIZE; i++)
         queue[i] <= NONE;
-    end else if (ready) begin
+    end else if (state == WAIT) begin
       cnt <= cnt == 0 ? 0 : cnt - 1;
       for (i = 0; i <= SIZE; i++)
         queue[i] <= i == SIZE ? NONE : queue[i+1];

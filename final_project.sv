@@ -30,13 +30,11 @@ module final_project import enum_type::*;
   reg [3:0] tetris_x;
   reg [4:0] tetris_y;
   reg inside_tetris;
-  state_type tetris_ctrl;
+  state_type tetris_ctrl, tetris_state;
   wire [4*4-1:0] tetris_score;
   wire [2:0] tetris_type;
   wire [2:0] tetris_hold;
   wire [2:0] tetris_next [0:3];
-  wire tetris_ready;
-
 
   /*clk_divider#(2) clk_divider0(
     .clk(clk),
@@ -55,7 +53,7 @@ module final_project import enum_type::*;
     .usr_btn(usr_btn),
     .uart_rx(uart_rx),
     .uart_tx(uart_tx),
-    .ready(tetris_ready),
+    .state(tetris_state),
     .control(tetris_ctrl)
   );
 
@@ -65,11 +63,11 @@ module final_project import enum_type::*;
     .x(tetris_x), 
     .y(tetris_y), 
     .ctrl(tetris_ctrl),
+    .state(tetris_state),
     .score(tetris_score),
     .kind(tetris_type),
     .hold(tetris_hold),
-    .next(tetris_next),
-    .ready(tetris_ready)
+    .next(tetris_next)
   );
 
   vga_sync_reg vs0(
