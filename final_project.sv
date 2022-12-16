@@ -137,7 +137,7 @@ module final_project import enum_type::*;
       `N2T(i, 2, nc, 0, row_B, 0)
       row_A[37:0] <= ns + 8'h22;
       row_B[37:0] <= nc + 8'h22;
-      `N2T(i, 4, score, 0, row_B, 8)
+      `N2T(i, 4, tetris_score, 0, row_B, 8)
     end
   end
 
