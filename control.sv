@@ -79,7 +79,7 @@ module control import enum_type::*;
           "W", "w": begin
             cnt <= cnt + 1; queue[cnt] <= DOWN;
           end
-          "S", "s": begin
+          "S", "s", " ": begin
             cnt <= cnt + 1; queue[cnt] <= DROP;
           end
           "C", "c": begin

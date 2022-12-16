@@ -61,6 +61,7 @@ wire [2:0] kind, hold, next [0:3];
 - DOWN
   - W
 - DROP
+  - S
   - space
 - HOLD
   - btn1
