@@ -100,7 +100,7 @@ module tetris(
     INIT, GEN, WAIT, HOLD,
     ROTATE, LEFT, RIGHT, DOWN, BAR,
     BCHECK, DCHECK, MCHECK, HCHECK,
-    CLEAR, END
+    CPREP, CLEAR, END
   } state_type;
 
   // declaration --------------------------------------------------
@@ -221,7 +221,7 @@ module tetris(
         else if (outside)
             next_state = END;
         else
-            next_state = CLEAR;
+            next_state = CPREP;
       end
       DCHECK: begin
         if (valid)
@@ -229,13 +229,17 @@ module tetris(
         else if (outside)
             next_state = END;
         else
-            next_state = CLEAR;
+            next_state = CPREP;
       end
       MCHECK, HCHECK: begin
         next_state = WAIT;
       end
+      CPREP: begin
+        next_state = CLEAR;
+      end
       CLEAR: begin
-        if (clear_counter == 19) next_state = GEN;
+        if (do_clear) next_state = CPREP;
+        else if (clear_counter == 19) next_state = GEN;
         else next_state = CLEAR;
       end
       END: begin
@@ -320,23 +324,22 @@ module tetris(
           placed_kind[2] <= placed_kind[2] | (curr_mask[199:0] & {200{curr_kind[2]}});
           placed_kind[1] <= placed_kind[1] | (curr_mask[199:0] & {200{curr_kind[1]}});
           placed_kind[0] <= placed_kind[0] | (curr_mask[199:0] & {200{curr_kind[0]}});
-          test_mask <= placed_mask;
-          clear_mask <= {200{1'b1}};
-          clear_counter <= 0;
         end
+      end
+      CPREP: begin
+        test_mask <= placed_mask;
+        clear_mask <= {200{1'b1}};
+        clear_counter <= 0;
       end
       CLEAR: begin
         test_mask <= test_mask >> 10;
         clear_mask <= clear_mask << 10;
+        clear_counter <= clear_counter + 1;
         if (do_clear) begin
           placed_kind[2] <= new_placed_kind[2];
           placed_kind[1] <= new_placed_kind[1];
           placed_kind[0] <= new_placed_kind[0];
-          test_mask <= new_placed_kind[2] | new_placed_kind[1] | new_placed_kind[0];
-          clear_mask <= {200{1'b1}};
-          clear_counter <= 0;
         end
-        else clear_counter <= clear_counter + 1;
       end
     endcase
   end
