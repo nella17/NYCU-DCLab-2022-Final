@@ -106,7 +106,7 @@ module final_project import enum_type::*;
           3'b111: {VGA_RED, VGA_GREEN, VGA_BLUE} <= 12'hF00;
         endcase
       end
-      else {VGA_RED, VGA_GREEN, VGA_BLUE} <= 12'h000;
+      else {VGA_RED, VGA_GREEN, VGA_BLUE} <= 12'h111;
     end
   end
 
