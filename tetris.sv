@@ -1,6 +1,7 @@
 `timescale 1ns / 1ps
 
-module tetris import enum_type::* (
+module tetris import enum_type::*;
+(
   input clk,
   input reset_n,
 

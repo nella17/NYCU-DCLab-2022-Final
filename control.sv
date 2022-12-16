@@ -1,6 +1,7 @@
 `timescale 1ns / 1ps
 
-module control import enum_type::* (
+module control import enum_type::*;
+(
   input  clk,
   input  reset_n,
   input  [3:0] usr_btn,
