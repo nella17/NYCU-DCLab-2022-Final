@@ -130,8 +130,10 @@ module final_project import enum_type::*;
   wire [7:0] ns = tetris_state;
   reg [7:0] nc;
   always_ff @(posedge clk_50MHz)
-      if (tetris_ctrl != NONE)
-          nc = tetris_ctrl;
+      if (~reset_n)
+          nc <= 0;
+      else if (tetris_ctrl != NONE)
+          nc <= tetris_ctrl;
   always_ff @(posedge clk_50MHz) begin
     if (~reset_n)
       { row_A, row_B } <= { row_init, row_init };
