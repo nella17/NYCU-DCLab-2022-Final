@@ -1,10 +1,5 @@
 `timescale 1ns / 1ps
-
-typedef enum {
-  NONE = 0,
-  LEFT, RIGHT, DOWN, DROP,
-  HOLD, ROTATE, ROTATE_REV, BAR
-} control_type;
+`include "control.svh"
 
 module final_project(
   input  clk,

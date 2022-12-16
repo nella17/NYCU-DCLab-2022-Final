@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+`include "control.svh"
 
 module control(
   input  clk,
