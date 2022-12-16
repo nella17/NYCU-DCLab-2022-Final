@@ -213,15 +213,13 @@ module tetris import enum_type::*;
             next_state = CLEAR;
       MCHECK, HCHECK:
         next_state = WAIT;
-      BCHECK:
-        next_state = WAIT;
       CLEAR:
         if (clear_counter == 19)
           next_state = GEN;
         else
           next_state = CLEAR;
       END:
-        if (ctrl != NONE)
+        if (ctrl != 0)
             next_state = INIT;
         else
             next_state = END;
@@ -301,23 +299,22 @@ module tetris import enum_type::*;
           placed_kind[2] <= placed_kind[2] | (curr_mask[199:0] & {200{curr_kind[2]}});
           placed_kind[1] <= placed_kind[1] | (curr_mask[199:0] & {200{curr_kind[1]}});
           placed_kind[0] <= placed_kind[0] | (curr_mask[199:0] & {200{curr_kind[0]}});
-          test_mask <= placed_mask;
-          clear_mask <= {200{1'b1}};
-          clear_counter <= 0;
         end
+      end
+      CPREP: begin
+        test_mask <= placed_mask;
+        clear_mask <= {200{1'b1}};
+        clear_counter <= 0;
       end
       CLEAR: begin
         test_mask <= test_mask >> 10;
         clear_mask <= clear_mask << 10;
+        clear_counter <= clear_counter + 1;
         if (do_clear) begin
           placed_kind[2] <= new_placed_kind[2];
           placed_kind[1] <= new_placed_kind[1];
           placed_kind[0] <= new_placed_kind[0];
-          test_mask <= new_placed_kind[2] | new_placed_kind[1] | new_placed_kind[0];
-          clear_mask <= {200{1'b1}};
-          clear_counter <= 0;
         end
-        else clear_counter <= clear_counter + 1;
       end
     endcase
   end

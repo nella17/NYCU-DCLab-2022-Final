@@ -2,32 +2,28 @@
 
 module tb_tetris;
 
+  reg clk;
+  reg reset_n;
   reg [3:0] x;
   reg [4:0] y;
   reg [2:0] ctrl;
-  reg clk;
-  reg reset_n;
   wire [4*4-1:0] score;
-  wire [2:0] type;
+  wire [2:0] kind;
   wire [2:0] hold;
-  wire [2:0] next_0;
-  wire [2:0] next_1;
-  wire [2:0] next_2;
-  wire [2:0] next_3;
+  wire [2:0] next [0:3];
+  wire ready;
   
   tetris tetris_0(
+    .clk(clk),
+    .reset_n(reset_n),
     .x(x),
     .y(y),
     .ctrl(ctrl),
-    .clk(clk),
-    .reset_n(reset_n),
     .score(score),
-    .type(type),
+    .kind(kind),
     .hold(hold),
-    .next_0(next_0),
-    .next_1(next_1),
-    .next_2(next_2),
-    .next_3(next_3)
+    .next(next),
+    .ready(ready)
   );
   
   always begin
@@ -42,12 +38,13 @@ module tb_tetris;
     #2.1 reset_n <= 1;
   end
   
+  // remember to change always_ff to always_comb in tetris.sv
   always @(negedge clk) begin
     $display("==========");
     for (y = 0; y < 20; y = y + 1) begin
       for (x = 0; x < 10; x = x + 1) begin
         #0.001; 
-        $write("%d", type);
+        $write("%d", kind);
       end
       $display;
     end

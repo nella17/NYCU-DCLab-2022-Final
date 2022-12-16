@@ -5,6 +5,6 @@ package enum_type;
     LEFT, RIGHT, DOWN, DROP,
     HOLD, ROTATE, ROTATE_REV, BAR,
     PCHECK, DCHECK, MCHECK, HCHECK, BCHECK,
-    CLEAR, END
+    CPREP, CLEAR, END
   } state_type;
 endpackage
