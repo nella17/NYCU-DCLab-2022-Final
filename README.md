@@ -109,9 +109,11 @@ MCHECK --> WAIT_
 HCHECK --> WAIT_
 BCHECK --> WAIT_
 WAIT_ --> WAIT
-CLEAR_END --> CLEAR  : !outside
+CLEAR_END --> CPREP  : !outside
 CLEAR_END --> END    : outside
 END --> INIT         : ctrl
+CPREP --> CLEAR
+CLEAR --> CPREP
 CLEAR --> GEN
 ```
 
