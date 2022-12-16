@@ -53,18 +53,20 @@ module control(
 
   // control
   localparam SIZE = 10;
-  reg [$clog2(SIZE):0] cnt;
-  control_type [0:SIZE] queue;
+  reg [$clog2(SIZE):0] cnt, i;
+  control_type queue [0:SIZE];
 
   assign control = queue[0];
 
   always_ff @(posedge clk) begin
     if (~reset_n) begin
       cnt <= 0;
-      queue <= 0;
+      for (i = 0; i <= SIZE; i++)
+        queue[i] <= NONE;
     end else if (ready) begin
       cnt <= cnt == 0 ? 0 : cnt - 1;
-      queue <= { queue[1:SIZE], NONE };
+      for (i = 0; i <= SIZE; i++)
+        queue[i] <= i == SIZE ? NONE : queue[i+1];
     end else begin
       if (received) begin
         case (rx_byte)

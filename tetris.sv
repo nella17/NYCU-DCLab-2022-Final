@@ -186,7 +186,7 @@ module tetris(
     next_state = INIT;
     if (reset_n) case (state)
       INIT:
-        if (ctrl != 0)
+        if (ctrl != NONE)
             next_state = GEN;
         else
             next_state = INIT;
@@ -235,7 +235,7 @@ module tetris(
         else
           next_state = CLEAR;
       END:
-        if (ctrl != 0)
+        if (ctrl != NONE)
             next_state = INIT;
         else
             next_state = END;
