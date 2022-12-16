@@ -125,12 +125,14 @@ module final_project import enum_type::*;
   );
 
   reg [7:0] i;
+  wire [7:0] ns = tetris_state;
+  wire [7:0] nc = tetris_ctrl;
   always_ff @(posedge clk) begin
     if (~reset_n)
       { row_A, row_B } <= 0;
     else begin
-      `N2T(i, 1, tetris_state, 0, row_A, 0)
-      `N2T(i, 1, tetris_ctrl,  0, row_B, 0)
+      `N2T(i, 2, ns, 0, row_A, 0)
+      `N2T(i, 2, nc,  0, row_B, 0)
     end
   end
 
