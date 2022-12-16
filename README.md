@@ -61,27 +61,33 @@ graph TD;
 stateDiagram-v2
 direction LR
 [*] --> INIT
-INIT --> GEN
-GEN --> NEXT
-NEXT --> END     :overlap
-END --> [*]
-NEXT --> WAIT
-WAIT --> ROTATE : ctrl-rot
-WAIT --> LEFT   : ctrl-left
+INIT --> GEN    : ctrl
+GEN --> WAIT
+WAIT --> SPACE  : ctrl-space
 WAIT --> DOWN   : ctrl-down
+WAIT --> LEFT   : ctrl-left
 WAIT --> RIGHT  : ctrl-right
-WAIT --> BAR    : ctrl-bar
+WAIT --> ROTATE : ctrl-rot
 WAIT --> HOLD   : ctrl-hold
-state WAIT_IF <<choice>>
-ROTATE --> WAIT_IF
-LEFT   --> WAIT_IF
-DOWN   --> WAIT_IF
-RIGHT  --> WAIT_IF
-HOLD   --> NEXT
-BAR    --> WAIT_IF
-WAIT_IF --> WAIT
-WAIT_IF --> END    :overlap
-WAIT_IF --> CLEAR  :stop
+WAIT --> BAR    : ctrl-bar
+SPACE --> SCHECK
+DOWN --> DCHECK
+LEFT --> MCHECK
+RIGHT --> MCHECK
+ROTATE --> MCHECK
+HOLD --> HCHECK
+SCHECK --> SPACE     : valid
+state CLEAR_END <<choice>>
+state WAIT_ <<choice>>
+SCHECK --> CLEAR_END : !valid
+DCHECK --> CLEAR_END : !valid
+DCHECK --> WAIT_     : valid
+MCHECK --> WAIT_
+HCHECK --> WAIT_
+WAIT_ --> WAIT
+CLEAR_END --> CLEAR  : !outside
+CLEAR_END --> END    : outside
+END --> INIT         : ctrl
 CLEAR --> GEN
 ```
 
