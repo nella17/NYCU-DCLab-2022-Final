@@ -71,10 +71,7 @@ wire [2:0] kind, hold, next [0:3];
   - X
 - ROTATE_REV
   - Z
-
-```mermaid
-graph TD;
-```
+- BAR
 
 ### Tetris
 
@@ -91,7 +88,6 @@ WAIT --> RIGHT  : ctrl-RIGHT
 WAIT --> ROTATE : ctrl-ROTATE
 WAIT --> ROTATE_REV : ctrl-ROTATE_REV
 WAIT --> HOLD   : ctrl-HOLD
-WAIT --> BAR    : ctrl-BAR
 DROP --> PCHECK
 DOWN --> DCHECK
 LEFT --> MCHECK
@@ -108,14 +104,16 @@ DCHECK --> CLEAR_END : !valid
 DCHECK --> WAIT_     : valid
 MCHECK --> WAIT_
 HCHECK --> WAIT_
-BCHECK --> WAIT_
 WAIT_ --> WAIT
 CLEAR_END --> CPREP  : !outside
 CLEAR_END --> END    : outside
 END --> INIT         : ctrl
 CPREP --> CLEAR
 CLEAR --> CPREP
-CLEAR --> GEN
+CLEAR --> GEN        : !ctrl-BAR
+CLEAR --> BAR        : ctrl-BAR
+BCHECK --> GEN       : valid
+BCHECK --> END       : !valid
 ```
 
 ### Display
