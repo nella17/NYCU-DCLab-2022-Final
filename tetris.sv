@@ -97,7 +97,7 @@ module tetris(
 
   typedef enum {
     INIT, GEN, WAIT, HOLD,
-    ROTATE, LEFT, RIGHT, BAR,
+    ROTATE, LEFT, RIGHT, DOWN, BAR,
     BCHECK, DCHECK, MCHECK, HCHECK,
     CLEAR, END
   } state_type;
@@ -115,7 +115,6 @@ module tetris(
   wire [3:0] right_x_offset;
   wire [4:0] down_y_offset;
   wire [219:0] gen_mask;
-  wire [7:0] mask_shift;
   wire [219:0] hold_mask;
   wire [219:0] rotate_mask;
   wire [219:0] left_mask;
@@ -156,17 +155,16 @@ module tetris(
                      3'b000, mask[next_kind][2][0], 3'b000,
                      3'b000, mask[next_kind][3][0], 3'b000,
                      180'b0};
-  assign mask_shift = curr_x_offset - 2 + 10 * curr_y_offset;
   assign hold_mask = {mask[hold][0][0], 6'b000,
                       mask[hold][1][0], 6'b000,
                       mask[hold][2][0], 6'b000,
                       mask[hold][3][0], 6'b000,
-                      180'b0} >> mask_shift;
+                      180'b0} >> (curr_x_offset - 2) >> (10 * curr_y_offset);
   assign rotate_mask = {mask[curr_kind][0][next_rotate_idx], 6'b000,
                         mask[curr_kind][1][next_rotate_idx], 6'b000,
                         mask[curr_kind][2][next_rotate_idx], 6'b000,
                         mask[curr_kind][3][next_rotate_idx], 6'b000,
-                        180'b0} >> mask_shift;
+                        180'b0} >> (curr_x_offset - 2) >> (10 * curr_y_offset);
   assign left_mask = curr_mask << 1;
   assign right_mask = curr_mask >> 1;
   assign down_mask = curr_mask >> 10;
