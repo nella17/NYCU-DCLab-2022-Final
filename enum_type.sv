@@ -4,7 +4,7 @@ package enum_type;
     INIT, GEN, WAIT,
     LEFT, RIGHT, DOWN, DROP,
     HOLD, ROTATE, ROTATE_REV, BAR,
-    PCHECK, DCHECK, MCHECK, HCHECK, BCHECK,
-    CPREP, CLEAR, END
+    PCHECK, DCHECK, MCHECK, HCHECK,
+    CPREP, CLEAR, BPLACE, END
   } state_type;
 endpackage

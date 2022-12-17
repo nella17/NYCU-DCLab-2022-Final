@@ -91,6 +91,9 @@ module control import enum_type::*;
           "Z", "z": begin
             cnt <= cnt + 1; queue[cnt] <= ROTATE_REV;
           end
+          "B", "b": begin
+            cnt <= cnt + 1; queue[cnt] <= BAR;
+          end
         endcase
       end else if (debounced_btn[0]) begin
         cnt <= cnt + 1; queue[cnt] <= RIGHT;

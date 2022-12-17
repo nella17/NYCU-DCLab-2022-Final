@@ -10,6 +10,7 @@ module tetris import enum_type::*;
   input [3:0] x,  // [0, 10)
   input [4:0] y,  // [0, 20)
   input state_type ctrl,
+  input [9:0] bar_mask,
 
   output state_type state,
   output reg [4*4-1:0] score,  // 0xABCD BCD
@@ -106,6 +107,7 @@ module tetris import enum_type::*;
   wire [7:0] read_addr;
   wire [219:0] placed_mask;
   wire outside;
+  wire boutside;
   wire valid;
   wire [1:0] next_rotate_idx;
   wire [1:0] next_rotate_rev_idx;
@@ -138,12 +140,15 @@ module tetris import enum_type::*;
   reg [199:0] test_mask;
   reg [199:0] clear_mask;
   reg [4:0] clear_counter;
+  reg [199:0] pending_mask;
+  reg [4:0] pending_counter;
 
   // comb logic --------------------------------------------------
 
   assign read_addr = (19 - y) * 10 + (9 - x);
   assign placed_mask = {20'b0, placed_kind[2] | placed_kind[1] | placed_kind[0]};
   assign outside = |curr_mask[219:200];
+  assign boutside = |(placed_mask >> 10*(20-pending_counter));
   assign valid = min_x_offset[check_kind][check_rotate_idx] <= check_x_offset &&
                  check_x_offset <= max_x_offset[check_kind][check_rotate_idx] &&
                  check_y_offset <= max_y_offset[check_kind][check_rotate_idx] &&
@@ -202,6 +207,8 @@ module tetris import enum_type::*;
         next_state = DCHECK;
       DROP:
         next_state = PCHECK;
+      BAR:
+        next_state = WAIT;
       PCHECK:
         if (valid)
             next_state = DROP;
@@ -229,9 +236,14 @@ module tetris import enum_type::*;
         if (do_clear)
           next_state = CPREP;
         else if (clear_counter == 19)
-          next_state = GEN;
+          next_state = BPLACE;
         else
           next_state = CLEAR;
+      BPLACE:
+        if (boutside)
+          next_state = END;
+        else
+          next_state = GEN;
       END:
         if (ctrl != 0)
             next_state = INIT;
@@ -261,6 +273,8 @@ module tetris import enum_type::*;
         placed_kind[2] <= 0;
         placed_kind[1] <= 0;
         placed_kind[0] <= 0;
+        pending_mask <= 0;
+        pending_counter <= 0;
       end
       GEN: begin
         curr_kind <= next[0];
@@ -315,6 +329,10 @@ module tetris import enum_type::*;
         check_y_offset <= down_y_offset;
         check_rotate_idx <= curr_rotate_idx;
       end
+      BAR: begin
+        pending_mask <= {pending_mask[189:0], bar_mask};
+        pending_counter <= pending_counter + 1;
+      end
       PCHECK, DCHECK, MCHECK, HCHECK: begin
         if (valid) begin
           curr_kind <= check_kind;
@@ -344,6 +362,13 @@ module tetris import enum_type::*;
           placed_kind[1] <= (placed_kind[1] & ~clear_mask) | ((placed_kind[1] >> 10) & clear_mask);
           placed_kind[0] <= (placed_kind[0] & ~clear_mask) | ((placed_kind[0] >> 10) & clear_mask);
         end
+      end
+      BPLACE: begin
+        placed_kind[2] <= (placed_kind[2] << (10 * pending_counter)) | pending_mask;
+        placed_kind[1] <= (placed_kind[1] << (10 * pending_counter)) | pending_mask;
+        placed_kind[0] <= (placed_kind[0] << (10 * pending_counter)) | pending_mask;
+        pending_mask <= 0;
+        pending_counter <= 0;
       end
     endcase
   end
