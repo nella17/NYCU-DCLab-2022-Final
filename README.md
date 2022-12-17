@@ -90,6 +90,7 @@ WAIT --> RIGHT  : ctrl-RIGHT
 WAIT --> ROTATE : ctrl-ROTATE
 WAIT --> ROTATE_REV : ctrl-ROTATE_REV
 WAIT --> HOLD   : ctrl-HOLD
+WAIT --> BAR    : ctrl-BAR
 DROP --> PCHECK
 DOWN --> DCHECK
 LEFT --> MCHECK
@@ -97,10 +98,10 @@ RIGHT --> MCHECK
 ROTATE --> MCHECK
 ROTATE_REV --> MCHECK
 HOLD --> HCHECK
-BAR --> BCHECK
+state WAIT_ <<choice>>
+BAR --> WAIT_
 PCHECK --> DROP     : valid
 state CLEAR_END <<choice>>
-state WAIT_ <<choice>>
 PCHECK --> CLEAR_END : !valid
 DCHECK --> CLEAR_END : !valid
 DCHECK --> WAIT_     : valid
@@ -112,12 +113,10 @@ CLEAR_END --> CPREP  : !outside
 CLEAR_END --> END    : outside
 END --> INIT         : ctrl
 CPREP --> CLEAR
-CLEAR --> CPREP
-CLEAR --> GEN        : !ctrl-BAR
-CLEAR --> BAR        : ctrl-BAR
-BCHECK --> END       : !valid
-BCHECK --> BAR       : ctrl-BAR
-BCHECK --> GEN       : valid && !ctrl-BAR
+CLEAR --> CPREP      : do_clear
+CLEAR --> BPLACE     : finished
+BPLACE --> END       : boutside
+BPLACE --> GEN       : !boutside
 ```
 
 ### Display
