@@ -14,7 +14,7 @@
 - 進階功能 40% 12pts
     - [ ] 設計計分系統。
     - [x] T轉。
-    - [ ] 有Buffer功能可以換方塊。
+    - [x] 有Buffer功能可以換方塊。
     - [ ] 隨機生成障礙。
 - 額外功能 20% 6pts
     - [ ] 使用者介面 (如: 介面精緻等)
@@ -105,7 +105,8 @@ PCHECK --> CLEAR_END : !valid
 DCHECK --> CLEAR_END : !valid
 DCHECK --> WAIT_     : valid
 MCHECK --> WAIT_
-HCHECK --> WAIT_
+HCHECK --> WAIT_     : hold != 0
+HCHECK --> GEN       : hold = 0
 WAIT_ --> WAIT
 CLEAR_END --> CPREP  : !outside
 CLEAR_END --> END    : outside
