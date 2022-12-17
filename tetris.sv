@@ -343,6 +343,7 @@ module tetris import enum_type::*;
           if (state == HCHECK) hold <= curr_kind;
         end
         else if ((state == PCHECK || state == DCHECK)) begin
+          curr_mask <= 0;
           placed_kind[2] <= placed_kind[2] | (curr_mask[199:0] & {200{curr_kind[2]}});
           placed_kind[1] <= placed_kind[1] | (curr_mask[199:0] & {200{curr_kind[1]}});
           placed_kind[0] <= placed_kind[0] | (curr_mask[199:0] & {200{curr_kind[0]}});
