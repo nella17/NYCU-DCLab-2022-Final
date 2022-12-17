@@ -96,14 +96,14 @@ DOWN --> DCHECK
 LEFT --> MCHECK
 RIGHT --> MCHECK
 ROTATE --> MCHECK
+BAR --> WAIT
 ROTATE_REV --> MCHECK
 HOLD --> HCHECK
-state WAIT_ <<choice>>
-BAR --> WAIT_
 PCHECK --> DROP     : valid
 state CLEAR_END <<choice>>
 PCHECK --> CLEAR_END : !valid
 DCHECK --> CLEAR_END : !valid
+state WAIT_ <<choice>>
 DCHECK --> WAIT_     : valid
 MCHECK --> WAIT_
 HCHECK --> WAIT_     : hold != 0
