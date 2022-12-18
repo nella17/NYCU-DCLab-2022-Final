@@ -13,6 +13,8 @@ module control import enum_type::*;
 );
   genvar gi;
 
+  localparam QSIZE = 16;
+
   // uart
 
   wire transmit, received;
@@ -105,21 +107,20 @@ module control import enum_type::*;
       else
         next = NONE;
 
-  localparam SIZE = 10;
-  reg [$clog2(SIZE):0] cnt = 0, i;
-  state_type queue [0:SIZE];
+  reg [$clog2(QSIZE):0] cnt = 0, i;
+  state_type queue [0:QSIZE];
 
   assign control = queue[0];
 
   always_ff @(posedge clk) begin
     if (~reset_n) begin
       cnt <= 0;
-      for (i = 0; i <= SIZE; i++)
+      for (i = 0; i <= QSIZE; i++)
         queue[i] <= NONE;
     end else if (state == WAIT) begin
       cnt <= cnt == 0 ? 0 : cnt - (next == NONE);
-      for (i = 0; i <= SIZE; i++)
-        queue[i] <= i == cnt - 1 ? next : i == SIZE ? NONE : queue[i+1];
+      for (i = 0; i <= QSIZE; i++)
+        queue[i] <= i == cnt - 1 ? next : i == QSIZE ? NONE : queue[i+1];
     end else begin
       cnt <= cnt + (next != NONE);
       queue[cnt] <= next;
