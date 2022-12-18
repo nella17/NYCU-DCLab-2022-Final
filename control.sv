@@ -14,6 +14,7 @@ module control import enum_type::*;
   genvar gi;
 
   localparam QSIZE = 16;
+  localparam DOWN_TICK = 50_000_000;
 
   // uart
 
@@ -73,7 +74,20 @@ module control import enum_type::*;
 
   // control
 
-  state_type next;
+  reg [$clog2(DOWN_TICK)+2:0] down_cnt = 0;
+  state_type next = NONE;
+
+  always_ff @(posedge clk)
+    if (~reset_n)
+      down_cnt <= 0;
+    else if (next == DOWN)
+      if (down_cnt < DOWN_TICK)
+        down_cnt <= 0;
+      else
+        down_cnt <= down_cnt - DOWN_TICK;
+    else
+      down_cnt <= down_cnt + 1;
+
   always_comb
       if (received)
         case (rx_byte)
