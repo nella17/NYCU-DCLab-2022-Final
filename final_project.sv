@@ -37,13 +37,11 @@ module final_project import enum_type::*;
   wire [9:0] pixel_y;   // y coordinate of the next pixel (between 0 ~ 479)
 
   wire inside_tetris;
-  wire [4:0] tetris_x, tetris_y;
+  reg [4:0] tetris_x, tetris_y;
   state_type tetris_ctrl, tetris_state;
   wire [9:0] tetris_bar_mask = 10'b1110111111;
   wire [4*4-1:0] tetris_score;
-  wire [2:0] tetris_kind;
-  wire [2:0] tetris_hold;
-  wire [2:0] tetris_next [0:3];
+  wire [2:0] tetris_kind, tetris_hold, tetris_next[0:3];
 
   /*clk_divider#(2) clk_divider0(
     .clk(clk),
@@ -90,8 +88,10 @@ module final_project import enum_type::*;
   assign usr_led = usr_btn ^ usr_sw;
 
   assign inside_tetris = (220 <= pixel_x) & (pixel_x < 420) & (40 <= pixel_y) & (pixel_y < 440);
-  assign tetris_x = ~inside_tetris ? 0 : (pixel_x - 220) / 20;
-  assign tetris_y = ~inside_tetris ? 0 : (pixel_y -  40) / 20;
+  always @(posedge clk_50MHz) begin
+    tetris_x <= ~inside_tetris ? 0 : (pixel_x - 220) / 20;
+    tetris_y <= ~inside_tetris ? 0 : (pixel_y -  40) / 20;
+  end
 
   always @(posedge clk_50MHz) begin
     if (p_tick) begin
