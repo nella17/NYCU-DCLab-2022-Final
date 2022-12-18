@@ -125,20 +125,20 @@ module tetris import enum_type::*;
   state_type next_state;
 
   // registers
-  reg [199:0] placed_kind [2:0];
-  reg [2:0] curr_kind;
-  reg [219:0] curr_mask;
-  reg [3:0] curr_x_offset;
-  reg [4:0] curr_y_offset;
-  reg [1:0] curr_rotate_idx;
-  reg [2:0] check_kind;
-  reg [219:0] check_mask;
-  reg [3:0] check_x_offset;
-  reg [4:0] check_y_offset;
-  reg [1:0] check_rotate_idx;
-  reg [199:0] test_mask;
-  reg [199:0] clear_mask;
-  reg [4:0] clear_counter;
+  reg [199:0] placed_kind [2:0] = { 3{ 0 } };
+  reg [2:0] curr_kind = 0;
+  reg [219:0] curr_mask = 0;
+  reg [3:0] curr_x_offset = 0;
+  reg [4:0] curr_y_offset = 0;
+  reg [1:0] curr_rotate_idx = 0;
+  reg [2:0] check_kind = 0;
+  reg [219:0] check_mask = 0;
+  reg [3:0] check_x_offset = 0;
+  reg [4:0] check_y_offset = 0;
+  reg [1:0] check_rotate_idx = 0;
+  reg [199:0] test_mask = 0;
+  reg [199:0] clear_mask = 0;
+  reg [4:0] clear_counter = 0;
 
   // comb logic --------------------------------------------------
 
