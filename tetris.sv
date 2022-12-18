@@ -10,6 +10,7 @@ module tetris import enum_type::*;
   input [3:0] x,  // [0, 10)
   input [4:0] y,  // [0, 20)
   input state_type ctrl,
+  input [9:0] bar_mask,
 
   output state_type state,
   output reg [4*4-1:0] score,  // 0xABCD BCD
@@ -106,13 +107,14 @@ module tetris import enum_type::*;
   wire [7:0] read_addr;
   wire [219:0] placed_mask;
   wire outside;
+  wire boutside;
   wire valid;
-  wire [2:0] next_kind;
   wire [1:0] next_rotate_idx;
   wire [1:0] next_rotate_rev_idx;
   wire [3:0] left_x_offset;
   wire [3:0] right_x_offset;
   wire [4:0] down_y_offset;
+  wire [2:0] hold_kind;
   wire [219:0] gen_mask;
   wire [219:0] hold_mask;
   wire [219:0] rotate_mask;
@@ -120,7 +122,6 @@ module tetris import enum_type::*;
   wire [219:0] left_mask;
   wire [219:0] right_mask;
   wire [219:0] down_mask;
-  wire [199:0] new_placed_kind [2:0];
   wire do_clear;
   state_type next_state;
 
@@ -139,32 +140,35 @@ module tetris import enum_type::*;
   reg [199:0] test_mask = 0;
   reg [199:0] clear_mask = 0;
   reg [4:0] clear_counter = 0;
+  reg [199:0] pending_mask = 0;
+  reg [4:0] pending_counter = 0;
 
   // comb logic --------------------------------------------------
 
   assign read_addr = (19 - y) * 10 + (9 - x);
   assign placed_mask = {20'b0, placed_kind[2] | placed_kind[1] | placed_kind[0]};
   assign outside = |curr_mask[219:200];
+  assign boutside = |(placed_mask >> 10*(20-pending_counter));
   assign valid = min_x_offset[check_kind][check_rotate_idx] <= check_x_offset &&
                  check_x_offset <= max_x_offset[check_kind][check_rotate_idx] &&
                  check_y_offset <= max_y_offset[check_kind][check_rotate_idx] &&
                  !(|(check_mask & placed_mask));
-  assign next_kind = (curr_kind == 7) ? 1 : curr_kind + 1;
   assign next_rotate_idx = curr_rotate_idx + 1;
   assign next_rotate_rev_idx = curr_rotate_idx - 1;
   assign left_x_offset = curr_x_offset - 1;
   assign right_x_offset = curr_x_offset + 1;
   assign down_y_offset = curr_y_offset + 1;
-  assign gen_mask = {3'b000, mask[next_kind][0][0], 3'b000,
-                     3'b000, mask[next_kind][1][0], 3'b000,
-                     3'b000, mask[next_kind][2][0], 3'b000,
-                     3'b000, mask[next_kind][3][0], 3'b000,
+  assign hold_kind = (hold == 0) ? next[0] : hold;
+  assign gen_mask = {3'b000, mask[next[0]][0][0], 3'b000,
+                     3'b000, mask[next[0]][1][0], 3'b000,
+                     3'b000, mask[next[0]][2][0], 3'b000,
+                     3'b000, mask[next[0]][3][0], 3'b000,
                      180'b0};
-  assign hold_mask = {mask[hold][0][0], 6'b000,
-                      mask[hold][1][0], 6'b000,
-                      mask[hold][2][0], 6'b000,
-                      mask[hold][3][0], 6'b000,
-                      180'b0} >> (curr_x_offset - 2) >> (10 * curr_y_offset);
+  assign hold_mask = {3'b000, mask[hold_kind][0][0], 3'b000,
+                      3'b000, mask[hold_kind][1][0], 3'b000,
+                      3'b000, mask[hold_kind][2][0], 3'b000,
+                      3'b000, mask[hold_kind][3][0], 3'b000,
+                      180'b0};
   assign rotate_mask = {mask[curr_kind][0][next_rotate_idx], 6'b000,
                         mask[curr_kind][1][next_rotate_idx], 6'b000,
                         mask[curr_kind][2][next_rotate_idx], 6'b000,
@@ -178,9 +182,6 @@ module tetris import enum_type::*;
   assign left_mask = curr_mask << 1;
   assign right_mask = curr_mask >> 1;
   assign down_mask = curr_mask >> 10;
-  assign new_placed_kind[2] = (placed_kind[2] & ~clear_mask) | ((placed_kind[2] >> 10) & clear_mask);
-  assign new_placed_kind[1] = (placed_kind[1] & ~clear_mask) | ((placed_kind[1] >> 10) & clear_mask);
-  assign new_placed_kind[0] = (placed_kind[0] & ~clear_mask) | ((placed_kind[0] >> 10) & clear_mask);
   assign do_clear = &test_mask[9:0];
 
   always_comb begin
@@ -206,6 +207,8 @@ module tetris import enum_type::*;
         next_state = DCHECK;
       DROP:
         next_state = PCHECK;
+      BAR:
+        next_state = WAIT;
       PCHECK:
         if (valid)
             next_state = DROP;
@@ -220,17 +223,27 @@ module tetris import enum_type::*;
             next_state = END;
         else
             next_state = CPREP;
-      MCHECK, HCHECK:
+      MCHECK:
         next_state = WAIT;
+      HCHECK:
+        if (hold == 0)
+          next_state = GEN;
+        else
+          next_state = WAIT;
       CPREP:
         next_state = CLEAR;
       CLEAR:
         if (do_clear)
           next_state = CPREP;
         else if (clear_counter == 19)
-          next_state = GEN;
+          next_state = BPLACE;
         else
           next_state = CLEAR;
+      BPLACE:
+        if (boutside)
+          next_state = END;
+        else
+          next_state = GEN;
       END:
         if (ctrl != 0)
             next_state = INIT;
@@ -252,23 +265,33 @@ module tetris import enum_type::*;
     case (state)
       INIT: begin
         hold <= 0;
+        curr_kind <= 0;
+        next[0] <= 1;
+        next[1] <= 2;
+        next[2] <= 3;
+        next[3] <= 4;
         placed_kind[2] <= 0;
         placed_kind[1] <= 0;
         placed_kind[0] <= 0;
-        curr_kind <= 0;
+        pending_mask <= 0;
+        pending_counter <= 0;
       end
       GEN: begin
-        curr_kind <= next_kind;
+        curr_kind <= next[0];
+        next[0] <= next[1];
+        next[1] <= next[2];
+        next[2] <= next[3];
+        next[3] <= (next[3] == 7) ? 1 : next[3] + 1;
         curr_mask <= gen_mask;
         curr_x_offset <= 5;
         curr_y_offset <= 0;
         curr_rotate_idx <= 0;
       end
       HOLD: begin
-        check_kind <= hold;
+        check_kind <= hold_kind;
         check_mask <= hold_mask;
-        check_x_offset <= curr_x_offset;
-        check_y_offset <= curr_y_offset;
+        check_x_offset <= 5;
+        check_y_offset <= 0;
         check_rotate_idx <= 0;
       end
       ROTATE: begin
@@ -306,6 +329,10 @@ module tetris import enum_type::*;
         check_y_offset <= down_y_offset;
         check_rotate_idx <= curr_rotate_idx;
       end
+      BAR: begin
+        pending_mask <= {pending_mask[189:0], bar_mask};
+        pending_counter <= pending_counter + 1;
+      end
       PCHECK, DCHECK, MCHECK, HCHECK: begin
         if (valid) begin
           curr_kind <= check_kind;
@@ -315,7 +342,8 @@ module tetris import enum_type::*;
           curr_rotate_idx <= check_rotate_idx;
           if (state == HCHECK) hold <= curr_kind;
         end
-        else if ((state == PCHECK || state == DCHECK) && !outside) begin
+        else if ((state == PCHECK || state == DCHECK)) begin
+          curr_mask <= 0;
           placed_kind[2] <= placed_kind[2] | (curr_mask[199:0] & {200{curr_kind[2]}});
           placed_kind[1] <= placed_kind[1] | (curr_mask[199:0] & {200{curr_kind[1]}});
           placed_kind[0] <= placed_kind[0] | (curr_mask[199:0] & {200{curr_kind[0]}});
@@ -331,10 +359,17 @@ module tetris import enum_type::*;
         clear_mask <= clear_mask << 10;
         clear_counter <= clear_counter + 1;
         if (do_clear) begin
-          placed_kind[2] <= new_placed_kind[2];
-          placed_kind[1] <= new_placed_kind[1];
-          placed_kind[0] <= new_placed_kind[0];
+          placed_kind[2] <= (placed_kind[2] & ~clear_mask) | ((placed_kind[2] >> 10) & clear_mask);
+          placed_kind[1] <= (placed_kind[1] & ~clear_mask) | ((placed_kind[1] >> 10) & clear_mask);
+          placed_kind[0] <= (placed_kind[0] & ~clear_mask) | ((placed_kind[0] >> 10) & clear_mask);
         end
+      end
+      BPLACE: begin
+        placed_kind[2] <= (placed_kind[2] << (10 * pending_counter)) | pending_mask;
+        placed_kind[1] <= (placed_kind[1] << (10 * pending_counter)) | pending_mask;
+        placed_kind[0] <= (placed_kind[0] << (10 * pending_counter)) | pending_mask;
+        pending_mask <= 0;
+        pending_counter <= 0;
       end
     endcase
   end

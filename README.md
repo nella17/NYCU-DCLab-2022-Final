@@ -14,7 +14,7 @@
 - 進階功能 40% 12pts
     - [ ] 設計計分系統。
     - [x] T轉。
-    - [ ] 有Buffer功能可以換方塊。
+    - [x] 有Buffer功能可以換方塊。
     - [ ] 隨機生成障礙。
 - 額外功能 20% 6pts
     - [ ] 使用者介面 (如: 介面精緻等)
@@ -90,33 +90,33 @@ WAIT --> RIGHT  : ctrl-RIGHT
 WAIT --> ROTATE : ctrl-ROTATE
 WAIT --> ROTATE_REV : ctrl-ROTATE_REV
 WAIT --> HOLD   : ctrl-HOLD
+WAIT --> BAR    : ctrl-BAR
 DROP --> PCHECK
 DOWN --> DCHECK
 LEFT --> MCHECK
 RIGHT --> MCHECK
 ROTATE --> MCHECK
+BAR --> WAIT
 ROTATE_REV --> MCHECK
 HOLD --> HCHECK
-BAR --> BCHECK
 PCHECK --> DROP     : valid
 state CLEAR_END <<choice>>
-state WAIT_ <<choice>>
 PCHECK --> CLEAR_END : !valid
 DCHECK --> CLEAR_END : !valid
+state WAIT_ <<choice>>
 DCHECK --> WAIT_     : valid
 MCHECK --> WAIT_
-HCHECK --> WAIT_
+HCHECK --> WAIT_     : hold != 0
+HCHECK --> GEN       : hold = 0
 WAIT_ --> WAIT
 CLEAR_END --> CPREP  : !outside
 CLEAR_END --> END    : outside
 END --> INIT         : ctrl
 CPREP --> CLEAR
-CLEAR --> CPREP
-CLEAR --> GEN        : !ctrl-BAR
-CLEAR --> BAR        : ctrl-BAR
-BCHECK --> END       : !valid
-BCHECK --> BAR       : ctrl-BAR
-BCHECK --> GEN       : valid && !ctrl-BAR
+CLEAR --> CPREP      : do_clear
+CLEAR --> BPLACE     : finished
+BPLACE --> END       : boutside
+BPLACE --> GEN       : !boutside
 ```
 
 ### Display

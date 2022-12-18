@@ -43,13 +43,13 @@ module control import enum_type::*;
 
   wire [3:0] debounced_btn;
 
-  generate 
+  generate
     for (gi = 0; gi <= 3; gi = gi + 1)
       debouncer debouncer_btn(
         .clk(clk),
         .in(usr_btn[gi]),
         .out(debounced_btn[gi])
-      ); 
+      );
   endgenerate
 
   // sw
@@ -60,13 +60,13 @@ module control import enum_type::*;
 
   wire [3:0] debounced_sw;
 
-  generate 
+  generate
     for (gi = 0; gi <= 3; gi = gi + 1)
       debouncer debouncer_sw(
         .clk(clk),
         .in(~prev_usr_sw[gi] & usr_sw[gi]),
         .out(debounced_btn[gi])
-      ); 
+      );
   endgenerate
 
   // control
@@ -89,6 +89,8 @@ module control import enum_type::*;
             next = ROTATE;
           "Z", "z":
             next = ROTATE_REV;
+          "B", "b":
+            next = BAR;
           default:
             next = NONE;
         endcase

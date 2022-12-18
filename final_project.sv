@@ -40,8 +40,9 @@ module final_project import enum_type::*;
   reg [4:0] tetris_y;
   reg inside_tetris;
   state_type tetris_ctrl, tetris_state;
+  wire [9:0] tetris_bar_mask = 10'b1110111111;
   wire [4*4-1:0] tetris_score;
-  wire [2:0] tetris_type;
+  wire [2:0] tetris_kind;
   wire [2:0] tetris_hold;
   wire [2:0] tetris_next [0:3];
 
@@ -73,9 +74,10 @@ module final_project import enum_type::*;
     .x(tetris_x), 
     .y(tetris_y), 
     .ctrl(tetris_ctrl),
+    .bar_mask(tetris_bar_mask),
     .state(tetris_state),
     .score(tetris_score),
-    .kind(tetris_type),
+    .kind(tetris_kind),
     .hold(tetris_hold),
     .next(tetris_next)
   );
@@ -97,7 +99,7 @@ module final_project import enum_type::*;
   always @(posedge clk_50MHz) begin
     if (p_tick) begin
       if (visible & inside_tetris) begin
-        case (tetris_type)
+        case (tetris_kind)
           3'b000: {VGA_RED, VGA_GREEN, VGA_BLUE} <= 12'h000;
           3'b001: {VGA_RED, VGA_GREEN, VGA_BLUE} <= 12'h09D;
           3'b010: {VGA_RED, VGA_GREEN, VGA_BLUE} <= 12'h04F;
