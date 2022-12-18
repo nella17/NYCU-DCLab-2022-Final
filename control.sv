@@ -67,7 +67,7 @@ module control import enum_type::*;
       debouncer debouncer_sw(
         .clk(clk),
         .in(~prev_usr_sw[gi] & usr_sw[gi]),
-        .out(debounced_btn[gi])
+        .out(debounced_sw[gi])
       );
   endgenerate
 
@@ -101,9 +101,19 @@ module control import enum_type::*;
       else if (debounced_btn[1])
         next = DOWN;
       else if (debounced_btn[2])
-        next = ROTATE;
-      else if (debounced_btn[3])
         next = LEFT;
+      else if (debounced_btn[3])
+        next = HOLD;
+      else if (debounced_sw[0])
+        next = DROP;
+      else if (debounced_sw[1])
+        next = ROTATE;
+      else if (debounced_sw[2])
+        next = ROTATE_REV;
+      else if (debounced_sw[3])
+        next = BAR;
+      else if (down_cnt >= DOWN_TICK)
+        next = DOWN;
       else
         next = NONE;
 

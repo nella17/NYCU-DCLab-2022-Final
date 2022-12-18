@@ -53,26 +53,30 @@ wire [2:0] kind, hold, next [0:3];
 
 - NONE
 - LEFT
-  - btn3
   - A
+  - btn2
 - RIGHT
-  - btn0
   - D
+  - btn0
 - DOWN
   - S
+  - btn1
 - DROP
   - W
   - space
+  - sw0
 - HOLD
-  - btn1
   - C
+  - btn3
 - ROTATE
-  - btn2
   - X
+  - sw1
 - ROTATE_REV
   - Z
+  - sw2
 - BAR
   - B
+  - sw3
 
 
 ### Tetris
