@@ -5,6 +5,7 @@ module control import enum_type::*;
   input  clk,
   input  reset_n,
   input  [3:0] usr_btn,
+  input  [3:0] usr_sw,
   input  uart_rx,
   output uart_tx,
   input  state_type state,
@@ -47,6 +48,23 @@ module control import enum_type::*;
       debouncer debouncer_btn(
         .clk(clk),
         .in(usr_btn[gi]),
+        .out(debounced_btn[gi])
+      ); 
+  endgenerate
+
+  // sw
+
+  reg  [3:0] prev_usr_sw;
+  always_ff @(posedge clk)
+    prev_usr_sw <= usr_sw;
+
+  wire [3:0] debounced_sw;
+
+  generate 
+    for (gi = 0; gi <= 3; gi = gi + 1)
+      debouncer debouncer_sw(
+        .clk(clk),
+        .in(~prev_usr_sw[gi] & usr_sw[gi]),
         .out(debounced_btn[gi])
       ); 
   endgenerate

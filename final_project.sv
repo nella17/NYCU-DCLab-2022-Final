@@ -8,6 +8,7 @@ module final_project import enum_type::*;
   input  clk,
   input  reset_n,
   input  [3:0] usr_btn,
+  input  [3:0] usr_sw,
   output [3:0] usr_led,
 
   // VGA specific I/O ports
@@ -59,6 +60,7 @@ module final_project import enum_type::*;
     .clk(clk_50MHz),
     .reset_n(reset_n),
     .usr_btn(usr_btn),
+    .usr_sw(usr_sw),
     .uart_rx(uart_rx),
     .uart_tx(uart_tx),
     .state(tetris_state),
@@ -84,7 +86,7 @@ module final_project import enum_type::*;
     .pixel_x(pixel_x), .pixel_y(pixel_y)
   );
 
-  assign usr_led = usr_btn;
+  assign usr_led = usr_btn ^ usr_sw;
 
   always @(posedge clk_50MHz) begin
     tetris_x <= (pixel_x - 220) / 20;
