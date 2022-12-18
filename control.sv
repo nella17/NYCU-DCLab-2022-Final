@@ -52,6 +52,39 @@ module control import enum_type::*;
   endgenerate
 
   // control
+
+  state_type next;
+  always_comb
+      if (received)
+        case (rx_byte)
+          "A", "a":
+            next = LEFT;
+          "D", "d":
+            next = RIGHT;
+          "S", "s":
+            next = DOWN;
+          "W", "w", " ":
+            next = DROP;
+          "C", "c":
+            next = HOLD;
+          "X", "x":
+            next = ROTATE;
+          "Z", "z":
+            next = ROTATE_REV;
+          default:
+            next = NONE;
+        endcase
+      else if (debounced_btn[0])
+        next = RIGHT;
+      else if (debounced_btn[1])
+        next = DOWN;
+      else if (debounced_btn[2])
+        next = ROTATE;
+      else if (debounced_btn[3])
+        next = LEFT;
+      else
+        next = NONE;
+
   localparam SIZE = 10;
   reg [$clog2(SIZE):0] cnt = 0, i;
   state_type queue [0:SIZE];
@@ -63,44 +96,13 @@ module control import enum_type::*;
       cnt <= 0;
       for (i = 0; i <= SIZE; i++)
         queue[i] <= NONE;
-    end else if (state == WAIT && control != NONE) begin
-      cnt <= cnt == 0 ? 0 : cnt - 1;
+    end else if (state == WAIT) begin
+      cnt <= cnt == 0 ? 0 : cnt - (next == NONE);
       for (i = 0; i <= SIZE; i++)
-        queue[i] <= i == SIZE ? NONE : queue[i+1];
+        queue[i] <= i == cnt ? next : i == SIZE ? NONE : queue[i+1];
     end else begin
-      if (received) begin
-        case (rx_byte)
-          "A", "a": begin
-            cnt <= cnt + 1; queue[cnt] <= LEFT;
-          end
-          "D", "d": begin
-            cnt <= cnt + 1; queue[cnt] <= RIGHT;
-          end
-          "S", "s": begin
-            cnt <= cnt + 1; queue[cnt] <= DOWN;
-          end
-          "W", "w", " ": begin
-            cnt <= cnt + 1; queue[cnt] <= DROP;
-          end
-          "C", "c": begin
-            cnt <= cnt + 1; queue[cnt] <= HOLD;
-          end
-          "X", "x": begin
-            cnt <= cnt + 1; queue[cnt] <= ROTATE;
-          end
-          "Z", "z": begin
-            cnt <= cnt + 1; queue[cnt] <= ROTATE_REV;
-          end
-        endcase
-      end else if (debounced_btn[0]) begin
-        cnt <= cnt + 1; queue[cnt] <= RIGHT;
-      end else if (debounced_btn[1]) begin
-        cnt <= cnt + 1; queue[cnt] <= DOWN;
-      end else if (debounced_btn[2]) begin
-        cnt <= cnt + 1; queue[cnt] <= LEFT;
-      end else if (debounced_btn[3]) begin
-        cnt <= cnt + 1; queue[cnt] <= ROTATE;
-      end
+      cnt <= cnt + (next != NONE);
+      queue[cnt] <= next;
     end
   end
 
