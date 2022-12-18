@@ -36,9 +36,8 @@ module final_project import enum_type::*;
   wire [9:0] pixel_x;   // x coordinate of the next pixel (between 0 ~ 639) 
   wire [9:0] pixel_y;   // y coordinate of the next pixel (between 0 ~ 479)
 
-  reg [3:0] tetris_x;
-  reg [4:0] tetris_y;
-  reg inside_tetris;
+  wire inside_tetris;
+  wire [4:0] tetris_x, tetris_y;
   state_type tetris_ctrl, tetris_state;
   wire [9:0] tetris_bar_mask = 10'b1110111111;
   wire [4*4-1:0] tetris_score;
@@ -90,15 +89,15 @@ module final_project import enum_type::*;
 
   assign usr_led = usr_btn ^ usr_sw;
 
-  always @(posedge clk_50MHz) begin
-    tetris_x <= (pixel_x - 220) / 20;
-    tetris_y <= (pixel_y - 40) / 20;
-    inside_tetris <= (220 <= pixel_x) & (pixel_x < 420) & (40 <= pixel_y) & (pixel_y < 440);
-  end
+  assign inside_tetris = (220 <= pixel_x) & (pixel_x < 420) & (40 <= pixel_y) & (pixel_y < 440);
+  assign tetris_x = ~inside_tetris ? 0 : (pixel_x - 220) / 20;
+  assign tetris_y = ~inside_tetris ? 0 : (pixel_y -  40) / 20;
 
   always @(posedge clk_50MHz) begin
     if (p_tick) begin
-      if (visible & inside_tetris) begin
+      if (~visible)
+        {VGA_RED, VGA_GREEN, VGA_BLUE} <= 12'h000;
+      else if (inside_tetris)
         case (tetris_kind)
           3'b000: {VGA_RED, VGA_GREEN, VGA_BLUE} <= 12'h000;
           3'b001: {VGA_RED, VGA_GREEN, VGA_BLUE} <= 12'h09D;
@@ -109,8 +108,8 @@ module final_project import enum_type::*;
           3'b110: {VGA_RED, VGA_GREEN, VGA_BLUE} <= 12'h80C;
           3'b111: {VGA_RED, VGA_GREEN, VGA_BLUE} <= 12'hF00;
         endcase
-      end
-      else {VGA_RED, VGA_GREEN, VGA_BLUE} <= 12'h111;
+      else
+        {VGA_RED, VGA_GREEN, VGA_BLUE} <= 12'h777;
     end
   end
 
@@ -130,14 +129,15 @@ module final_project import enum_type::*;
     .LCD_D(LCD_D)
   );
 
-  reg [7:0] i;
   wire [7:0] ns = tetris_state;
-  reg [7:0] nc;
+  reg [7:0] nc = 0;
   always_ff @(posedge clk_50MHz)
       if (~reset_n)
           nc <= 0;
       else if (tetris_ctrl != NONE)
           nc <= tetris_ctrl;
+
+  reg [7:0] i;
   always_ff @(posedge clk_50MHz) begin
     if (~reset_n)
       { row_A, row_B } <= { row_init, row_init };
