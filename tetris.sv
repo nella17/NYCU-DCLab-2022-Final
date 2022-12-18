@@ -7,8 +7,7 @@ module tetris import enum_type::*;
   input clk,
   input reset_n,
 
-  input [3:0] x,  // [0, 10)
-  input [4:0] y,  // [0, 20)
+  input [4:0] x, y,  // [0, 10), [0, 20)
   input state_type ctrl,
   input [9:0] bar_mask,
 
@@ -69,7 +68,7 @@ module tetris import enum_type::*;
   };
 
   // [kind][rotate_idx]
-  localparam [1:0] min_x_offset [1:7][0:3] = '{
+  localparam [4:0] min_x_offset [1:7][0:3] = '{
     '{ 2, 0, 2, 1 },
     '{ 2, 1, 2, 2 },
     '{ 2, 1, 2, 2 },
@@ -80,7 +79,7 @@ module tetris import enum_type::*;
   };
 
   // [kind][rotate_idx]
-  localparam [3:0] max_x_offset [1:7][0:3] = '{
+  localparam [4:0] max_x_offset [1:7][0:3] = '{
     '{  8,  9,  8, 10 },
     '{  9,  9,  9, 10 },
     '{  9,  9,  9, 10 },
@@ -105,43 +104,43 @@ module tetris import enum_type::*;
 
   // nets
   wire [7:0] read_addr;
-  wire [219:0] placed_mask;
-  wire outside;
-  wire boutside;
-  wire valid;
-  wire [1:0] next_rotate_idx;
-  wire [1:0] next_rotate_rev_idx;
-  wire [3:0] left_x_offset;
-  wire [3:0] right_x_offset;
-  wire [4:0] down_y_offset;
+  wire outside,
+       boutside,
+       valid,
+       do_clear;
+  wire [1:0] next_rotate_idx,
+             next_rotate_rev_idx;
+  wire [4:0] left_x_offset,
+             right_x_offset,
+             down_y_offset;
   wire [2:0] hold_kind;
-  wire [219:0] gen_mask;
-  wire [219:0] hold_mask;
-  wire [219:0] rotate_mask;
-  wire [219:0] rotate_rev_mask;
-  wire [219:0] left_mask;
-  wire [219:0] right_mask;
-  wire [219:0] down_mask;
-  wire do_clear;
+  wire [219:0] placed_mask,
+               gen_mask,
+               hold_mask,
+               rotate_mask,
+               rotate_rev_mask,
+               left_mask,
+               right_mask,
+               down_mask;
   state_type next_state;
 
   // registers
-  reg [199:0] placed_kind [2:0] = { 0, 0, 0 };
-  reg [2:0] curr_kind = 0;
-  reg [219:0] curr_mask = 0;
-  reg [3:0] curr_x_offset = 0;
-  reg [4:0] curr_y_offset = 0;
-  reg [1:0] curr_rotate_idx = 0;
-  reg [2:0] check_kind = 0;
-  reg [219:0] check_mask = 0;
-  reg [3:0] check_x_offset = 0;
-  reg [4:0] check_y_offset = 0;
-  reg [1:0] check_rotate_idx = 0;
-  reg [199:0] test_mask = 0;
-  reg [199:0] clear_mask = 0;
-  reg [4:0] clear_counter = 0;
-  reg [199:0] pending_mask = 0;
-  reg [4:0] pending_counter = 0;
+  reg [2:0] curr_kind  = 0,
+            check_kind = 0;
+  reg [4:0] curr_x_offset  = 0,
+            curr_y_offset  = 0,
+            check_x_offset = 0,
+            check_y_offset = 0;
+  reg [1:0] curr_rotate_idx  = 0,
+            check_rotate_idx = 0;
+  reg [219:0] curr_mask  = 0,
+              check_mask = 0;
+  reg [199:0] placed_kind [2:0] = { 0, 0, 0 },
+              test_mask = 0,
+              clear_mask = 0,
+              pending_mask = 0;
+  reg [4:0] clear_counter   = 0,
+            pending_counter = 0;
 
   // comb logic --------------------------------------------------
 
