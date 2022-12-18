@@ -10,6 +10,7 @@ module control import enum_type::*;
   input  state_type state,
   output state_type control
 );
+  genvar gi;
 
   // uart
 
@@ -42,12 +43,11 @@ module control import enum_type::*;
   wire [3:0] debounced_btn;
 
   generate 
-    genvar gi;
     for (gi = 0; gi <= 3; gi = gi + 1)
-      debouncer debouncer_i(
+      debouncer debouncer_btn(
         .clk(clk),
-        .btn(usr_btn[gi]),
-        .debounced_btn(debounced_btn[gi])
+        .in(usr_btn[gi]),
+        .out(debounced_btn[gi])
       ); 
   endgenerate
 
