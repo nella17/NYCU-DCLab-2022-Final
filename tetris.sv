@@ -126,7 +126,7 @@ module tetris import enum_type::*;
   state_type next_state;
 
   // registers
-  reg [199:0] placed_kind [2:0] = { 3{ 0 } };
+  reg [199:0] placed_kind [2:0] = { 0, 0, 0 };
   reg [2:0] curr_kind = 0;
   reg [219:0] curr_mask = 0;
   reg [3:0] curr_x_offset = 0;
