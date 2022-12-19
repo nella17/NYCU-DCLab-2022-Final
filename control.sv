@@ -11,8 +11,9 @@ module control import enum_type::*;
   output uart_tx,
   input  state_type state,
   output state_type control,
-  output reg [9:0] bar_mask,
-  output reg start = 0
+  output logic [9:0] bar_mask,
+  output logic start = 0,
+  output logic over
 );
   genvar gi;
 
@@ -73,13 +74,15 @@ module control import enum_type::*;
       start <= 0;
     else if (next == INIT)
       start <= 1;
+  assign over = state == END;
+  logic during = start && ~over;
 
   reg [$clog2(DOWN_TICK)+2:0] down_cnt = 0;
   reg [$clog2(BAR_TICK)+2:0] bar_cnt = 0;
   state_type next = NONE;
 
   always_ff @(posedge clk)
-    if (~reset_n || ~start)
+    if (~reset_n || ~during)
       down_cnt <= 0;
     else if (next == DOWN)
       if (down_cnt < DOWN_TICK)
@@ -90,7 +93,7 @@ module control import enum_type::*;
       down_cnt <= down_cnt + 1;
 
   always_ff @(posedge clk)
-    if (~reset_n || ~start)
+    if (~reset_n || ~during)
       bar_cnt <= 0;
     else if (next == BAR)
       if (bar_cnt < BAR_TICK)
