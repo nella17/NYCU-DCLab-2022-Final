@@ -137,7 +137,7 @@ module tetris import enum_type::*;
             check_rotate_idx = 0;
   reg [219:0] curr_mask  = 0,
               check_mask = 0;
-  reg [199:0] placed_kind [2:0] = { 0, 0, 0 },
+  reg [199:0] placed_kind [3:0] = { 0, 0, 0, 0 },
               test_mask = 0,
               clear_mask = 0,
               pending_mask = 0;
@@ -147,7 +147,7 @@ module tetris import enum_type::*;
   // comb logic --------------------------------------------------
 
   assign read_addr = (19 - y) * 10 + (9 - x);
-  assign placed_mask = {20'b0, placed_kind[2] | placed_kind[1] | placed_kind[0]};
+  assign placed_mask = {20'b0, placed_kind[3] | placed_kind[2] | placed_kind[1] | placed_kind[0]};
   assign outside = |curr_mask[219:200];
   assign boutside = |(placed_mask >> 10*(20-pending_counter));
   assign valid = min_x_offset[check_kind][check_rotate_idx] <= check_x_offset &&
@@ -257,8 +257,15 @@ module tetris import enum_type::*;
   // seq logic --------------------------------------------------
 
   always_ff @(posedge clk)
-    if (curr_mask[read_addr]) kind <= curr_kind;
-    else kind <= {placed_kind[2][read_addr], placed_kind[1][read_addr], placed_kind[0][read_addr]};
+    if (curr_mask[read_addr])
+      kind <= curr_kind;
+    else
+      kind <= {
+        placed_kind[3][read_addr],
+        placed_kind[2][read_addr],
+        placed_kind[1][read_addr],
+        placed_kind[0][read_addr]
+      };
 
   always_ff @(posedge clk)
     state <= next_state;
@@ -273,7 +280,7 @@ module tetris import enum_type::*;
         rng[6+:3],
         rng[9+:3]
       };
-      placed_kind <= { 0, 0, 0 };
+      placed_kind <= { 0, 0, 0, 0 };
       pending_mask <= 0;
       pending_counter <= 0;
       hold_locked <= 0;
@@ -352,6 +359,7 @@ module tetris import enum_type::*;
           end
           else if ((state == PCHECK || state == DCHECK)) begin
             curr_mask <= 0;
+            placed_kind[3] <= placed_kind[3] | (curr_mask[199:0] & {200{curr_kind[3]}});
             placed_kind[2] <= placed_kind[2] | (curr_mask[199:0] & {200{curr_kind[2]}});
             placed_kind[1] <= placed_kind[1] | (curr_mask[199:0] & {200{curr_kind[1]}});
             placed_kind[0] <= placed_kind[0] | (curr_mask[199:0] & {200{curr_kind[0]}});
@@ -368,15 +376,17 @@ module tetris import enum_type::*;
           clear_mask <= clear_mask << 10;
           clear_counter <= clear_counter + 1;
           if (do_clear) begin
+            placed_kind[3] <= (placed_kind[3] & ~clear_mask) | ((placed_kind[3] >> 10) & clear_mask);
             placed_kind[2] <= (placed_kind[2] & ~clear_mask) | ((placed_kind[2] >> 10) & clear_mask);
             placed_kind[1] <= (placed_kind[1] & ~clear_mask) | ((placed_kind[1] >> 10) & clear_mask);
             placed_kind[0] <= (placed_kind[0] & ~clear_mask) | ((placed_kind[0] >> 10) & clear_mask);
           end
         end
         BPLACE: begin
-          placed_kind[2] <= (placed_kind[2] << (10 * pending_counter)) | pending_mask;
-          placed_kind[1] <= (placed_kind[1] << (10 * pending_counter)) | pending_mask;
-          placed_kind[0] <= (placed_kind[0] << (10 * pending_counter)) | pending_mask;
+          placed_kind[3] <= (placed_kind[3] << (10 * pending_counter)) | pending_mask;
+          placed_kind[2] <= (placed_kind[2] << (10 * pending_counter));
+          placed_kind[1] <= (placed_kind[1] << (10 * pending_counter));
+          placed_kind[0] <= (placed_kind[0] << (10 * pending_counter));
           pending_mask <= 0;
           pending_counter <= 0;
         end
