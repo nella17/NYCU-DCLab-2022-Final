@@ -38,7 +38,6 @@ module display(
   wire [11:0] data_out;
   wire        sram_we, sram_en;
   wire [16:0] bg_addr;
-  wire [11:0] bg_in;
   wire [11:0] bg_out;
   assign data_in = 12'h000;
   assign sram_we = 0;         // MAY HAVE TROUBLE !!!!!!!
@@ -99,7 +98,7 @@ module display(
 
   sram #(.DATA_WIDTH(12), .ADDR_WIDTH(17), .RAM_SIZE(BG_W*BG_H), .FILE("images.mem"))
     ram0 (.clk(clk), .we(sram_we), .en(sram_en),
-            .addr(bg_addr), .data_i(bg_in), .data_o(bg_out));
+            .addr(bg_addr), .data_i(data_in), .data_o(bg_out));
   sram #(.DATA_WIDTH(12), .ADDR_WIDTH(17), .RAM_SIZE(BLOCK_W*BLOCK_H * 7 + NUM_W*NUM_H*10 + GREEN), .FILE("block_num.mem"))
     ram1 (.clk(clk), .we(sram_we), .en(sram_en),
             .addr(sram_addr), .data_i(data_in), .data_o(data_out));
