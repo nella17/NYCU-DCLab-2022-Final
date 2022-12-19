@@ -43,6 +43,8 @@ module final_project import enum_type::*;
   wire [4*4-1:0] tetris_score;
   wire [2:0] tetris_kind, tetris_hold, tetris_next[0:3];
 
+  wire [31:0] rng;
+
   /*clk_divider#(2) clk_divider0(
     .clk(clk),
     .reset(~reset_n),
@@ -54,7 +56,13 @@ module final_project import enum_type::*;
     .clk_in1(clk)
   );
 
-  control control(
+  prng prng0(
+    .clk(clk_50MHz),
+    .reset_n(reset_n),
+    .rng(rng)
+  );
+
+  control control0(
     .clk(clk_50MHz),
     .reset_n(reset_n),
     .usr_btn(usr_btn),
@@ -68,6 +76,7 @@ module final_project import enum_type::*;
   tetris tetris0(
     .clk(clk_50MHz),
     .reset_n(reset_n),
+    .rng(rng),
     .x(tetris_x), 
     .y(tetris_y), 
     .ctrl(tetris_ctrl),

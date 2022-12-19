@@ -6,6 +6,7 @@ module tetris import enum_type::*;
 (
   input clk,
   input reset_n,
+  input [31:0] rng,
 
   input [4:0] x, y,  // [0, 10), [0, 20)
   input state_type ctrl,
@@ -264,7 +265,12 @@ module tetris import enum_type::*;
     if (~reset_n || state == INIT) begin
       hold <= 0;
       curr_kind <= 0;
-      next <= { 1, 2, 3, 4 };
+      next <= {
+        rng[0+:3],
+        rng[3+:3],
+        rng[6+:3],
+        rng[9+:3]
+      };
       placed_kind <= { 0, 0, 0 };
       pending_mask <= 0;
       pending_counter <= 0;
@@ -276,7 +282,7 @@ module tetris import enum_type::*;
             next[1], 
             next[2],
             next[3],
-            (next[3] == 7) ? 1 : next[3] + 1
+            rng[0+:3]
           };
           curr_mask <= gen_mask;
           curr_x_offset <= 5;
