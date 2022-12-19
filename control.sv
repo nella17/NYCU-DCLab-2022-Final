@@ -18,7 +18,7 @@ module control import enum_type::*;
 
   localparam QSIZE = 16;
   localparam DOWN_TICK = 50_000_000;
-  localparam BAR_TICK  = 500_000_000;
+  localparam BAR_TICK  = 1_000_000_000;
 
   // uart
 
