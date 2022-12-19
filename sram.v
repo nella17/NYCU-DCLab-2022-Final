@@ -45,7 +45,7 @@ module sram #(
     // ------------------------------------
     // Initialize the sram cells with the values defined in "matrices.mem"
     initial begin
-        $readmemh(INIT_MEM, RAM);
+        $readmemh(FILE, RAM);
     end
 
     // ------------------------------------
