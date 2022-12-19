@@ -109,6 +109,7 @@ module tetris import enum_type::*;
   wire outside,
        boutside,
        valid,
+       pvalid,
        do_clear;
   wire [1:0] next_rotate_idx,
              next_rotate_rev_idx;
@@ -123,7 +124,8 @@ module tetris import enum_type::*;
                rotate_rev_mask,
                left_mask,
                right_mask,
-               down_mask;
+               down_mask,
+               preview_down_mask;
   state_type next_state;
 
   // registers
@@ -136,13 +138,15 @@ module tetris import enum_type::*;
   reg [1:0] curr_rotate_idx  = 0,
             check_rotate_idx = 0;
   reg [219:0] curr_mask  = 0,
-              check_mask = 0;
+              check_mask = 0,
+              preview_mask = 0;
   reg [199:0] placed_kind [3:0] = { 0, 0, 0, 0 },
               test_mask = 0,
               clear_mask = 0,
               pending_mask = 0;
   reg [4:0] clear_counter   = 0,
             pending_counter = 0;
+  reg curr_mask_updated = 0;
 
   // comb logic --------------------------------------------------
 
@@ -154,6 +158,8 @@ module tetris import enum_type::*;
                  check_x_offset <= max_x_offset[check_kind][check_rotate_idx] &&
                  check_y_offset <= max_y_offset[check_kind][check_rotate_idx] &&
                  !(|(check_mask & placed_mask));
+  assign pvalid = !(|preview_mask[9:0]) &&
+                  !(|(preview_down_mask & placed_mask));
   assign next_rotate_idx = curr_rotate_idx + 1;
   assign next_rotate_rev_idx = curr_rotate_idx - 1;
   assign left_x_offset = curr_x_offset - 1;
@@ -183,6 +189,7 @@ module tetris import enum_type::*;
   assign left_mask = curr_mask << 1;
   assign right_mask = curr_mask >> 1;
   assign down_mask = curr_mask >> 10;
+  assign preview_down_mask = preview_mask >> 10;
   assign do_clear = &test_mask[9:0];
 
   always_comb begin
@@ -259,6 +266,8 @@ module tetris import enum_type::*;
   always_ff @(posedge clk)
     if (curr_mask[read_addr])
       kind <= curr_kind;
+    else if (preview_mask[read_addr])
+      kind <= 9;
     else
       kind <= {
         placed_kind[3][read_addr],
@@ -392,6 +401,20 @@ module tetris import enum_type::*;
         end
       endcase
     end
+  end
+
+  always_ff @(posedge clk) begin
+    if (state == GEN || state == PCHECK || state == DCHECK || state == MCHECK || state == HCHECK)
+      curr_mask_updated <= 1;
+    else
+      curr_mask_updated <= 0;
+  end
+
+  always_ff @(posedge clk) begin
+    if (curr_mask_updated)
+      preview_mask <= curr_mask;
+    else if (pvalid)
+      preview_mask <= preview_down_mask;
   end
 
   reg [4:0] score_carry = 0;
