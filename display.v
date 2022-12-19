@@ -90,10 +90,10 @@ module display(
     .pixel_x(pixel_x), .pixel_y(pixel_y)
   );
 
-  sram #(.DATA_WIDTH(12), .ADDR_WIDTH(18), .RAM_SIZE(BG_W*BG_H), .FILE("images.mem"))
+  sram #(.DATA_WIDTH(12), .ADDR_WIDTH(17), .RAM_SIZE(BG_W*BG_H), .FILE("images.mem"))
     ram0 (.clk(clk), .we(sram_we), .en(sram_en),
             .addr(bg_addr), .data_i(bg_in), .data_o(bg_out));
-  sram #(.DATA_WIDTH(12), .ADDR_WIDTH(18), .RAM_SIZE(BLOCK_W*BLOCK_H * 7 + NUM_W*NUM_H*10 + GREEN), .FILE("block_num.mem"))
+  sram #(.DATA_WIDTH(12), .ADDR_WIDTH(17), .RAM_SIZE(BLOCK_W*BLOCK_H * 7 + NUM_W*NUM_H*10 + GREEN), .FILE("block_num.mem"))
     ram1 (.clk(clk), .we(sram_we), .en(sram_en),
             .addr(sram_addr), .data_i(data_in), .data_o(data_out));
 
