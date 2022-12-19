@@ -16,7 +16,8 @@ module tetris import enum_type::*;
   output reg [4*4-1:0] score,  // 0xABCD BCD
   output reg [3:0] kind,
   output reg [3:0] hold,
-  output reg [3:0] next [0:3]
+  output reg [3:0] next [0:3],
+  output reg hold_locked
 );
   genvar gi;
 
@@ -200,7 +201,8 @@ module tetris import enum_type::*;
         else
           next_state = WAIT;
       HOLD:
-        next_state = HCHECK;
+        if (hold_locked) next_state = WAIT;
+        else next_state = HCHECK;
       LEFT, RIGHT, ROTATE, ROTATE_REV:
         next_state = MCHECK;
       DOWN:
@@ -274,6 +276,7 @@ module tetris import enum_type::*;
       placed_kind <= { 0, 0, 0 };
       pending_mask <= 0;
       pending_counter <= 0;
+      hold_locked <= 0;
     end else begin
       case (state)
         GEN: begin
@@ -295,6 +298,7 @@ module tetris import enum_type::*;
           check_x_offset <= 5;
           check_y_offset <= 0;
           check_rotate_idx <= 0;
+          hold_locked <= 1;
         end
         ROTATE: begin
           check_kind <= curr_kind;
@@ -357,6 +361,7 @@ module tetris import enum_type::*;
           test_mask <= placed_mask;
           clear_mask <= {200{1'b1}};
           clear_counter <= 0;
+          hold_locked <= 0;
         end
         CLEAR: begin
           test_mask <= test_mask >> 10;
