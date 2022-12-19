@@ -12,7 +12,7 @@ module control import enum_type::*;
   input  state_type state,
   output state_type control,
   output logic [9:0] bar_mask,
-  output logic start = 0,
+  output logic start,
   output logic over
 );
   genvar gi;
@@ -81,7 +81,7 @@ module control import enum_type::*;
     if (~reset_n)
       start <= 0;
     else if (next == INIT)
-      start <= 1;
+      start <= ~over;
   assign over = start && count_down == 0;
   logic during = start && ~over;
 
@@ -122,7 +122,7 @@ module control import enum_type::*;
       bar_cnt <= bar_cnt + rng[20+:3];
 
   always_comb
-    if (~start) begin
+    if (~during) begin
       if (received || |debounced_btn || |press_sw)
         next = INIT;
       else
