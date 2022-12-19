@@ -4,12 +4,14 @@ module control import enum_type::*;
 (
   input  clk,
   input  reset_n,
+  input  [31:0] rng,
   input  [3:0] usr_btn,
   input  [3:0] usr_sw,
   input  uart_rx,
   output uart_tx,
   input  state_type state,
-  output state_type control
+  output state_type control,
+  output reg [9:0] bar_mask
 );
   genvar gi;
 
@@ -150,5 +152,11 @@ module control import enum_type::*;
       queue[cnt] <= next;
     end
   end
+
+  always_ff @(posedge clk)
+    if (~reset_n)
+      bar_mask <= 0;
+    else
+      bar_mask <= 1 << (rng[16+:4]);
 
 endmodule

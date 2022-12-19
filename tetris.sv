@@ -332,8 +332,10 @@ module tetris import enum_type::*;
           check_rotate_idx <= curr_rotate_idx;
         end
         BAR: begin
-          pending_mask <= {pending_mask[189:0], bar_mask};
-          pending_counter <= pending_counter + 1;
+          if (bar_mask) begin
+            pending_mask <= { pending_mask[189:0], (bar_mask ^ 10'b1111111111) };
+            pending_counter <= pending_counter + 1;
+          end
         end
         PCHECK, DCHECK, MCHECK, HCHECK: begin
           if (valid) begin
