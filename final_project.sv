@@ -94,7 +94,7 @@ module final_project import enum_type::*;
     .VGA_BLUE(VGA_BLUE)
   );
 
-  assign usr_led = usr_btn;
+  assign usr_led = usr_btn ^ usr_sw;
 
   localparam row_init = "????????????????";
 

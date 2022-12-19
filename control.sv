@@ -60,17 +60,17 @@ module control import enum_type::*;
 
   // sw
 
-  reg  [3:0] prev_usr_sw;
-  always_ff @(posedge clk)
-    prev_usr_sw <= usr_sw;
-
   wire [3:0] debounced_sw;
+  reg  [3:0] prev_sw;
+  always_ff @(posedge clk)
+    prev_sw <= debounced_sw;
+  wire [3:0] press_sw = debounced_sw ^ prev_sw;
 
   generate
     for (gi = 0; gi <= 3; gi = gi + 1)
-      debouncer debouncer_sw(
+      debounce debounce_sw(
         .clk(clk),
-        .in(~prev_usr_sw[gi] & usr_sw[gi]),
+        .in(usr_sw[gi]),
         .out(debounced_sw[gi])
       );
   endgenerate
@@ -133,13 +133,13 @@ module control import enum_type::*;
         next = LEFT;
       else if (debounced_btn[3])
         next = HOLD;
-      else if (debounced_sw[0])
+      else if (press_sw[0])
         next = DROP;
-      else if (debounced_sw[1])
+      else if (press_sw[1])
         next = ROTATE;
-      else if (debounced_sw[2])
+      else if (press_sw[2])
         next = ROTATE_REV;
-      else if (debounced_sw[3])
+      else if (press_sw[3])
         next = BAR;
       else if (down_cnt >= DOWN_TICK)
         next = DOWN;
