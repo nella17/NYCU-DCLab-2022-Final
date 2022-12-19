@@ -18,8 +18,10 @@ module control import enum_type::*;
   genvar gi;
 
   localparam QSIZE = 16;
-  localparam DOWN_TICK = 50_000_000;
-  localparam BAR_TICK  = 1_000_000_000;
+  localparam SEC_TICK  = 50_000_000;
+  localparam COUNT_SEC = 60;
+  localparam DOWN_TICK = SEC_TICK;
+  localparam BAR_TICK  = SEC_TICK * 5 * 4;
 
   // uart
 
@@ -69,17 +71,33 @@ module control import enum_type::*;
 
   // control
 
+  reg [$clog2(SEC_TICK)+2:0] sec_cnt = 0;
+  reg [$clog2(COUNT_SEC)+2:0] count_down = COUNT_SEC;
+  reg [$clog2(DOWN_TICK)+2:0] down_cnt = 0;
+  reg [$clog2(BAR_TICK)+2:0] bar_cnt = 0;
+  state_type next = NONE;
+
   always_ff @(posedge clk)
     if (~reset_n)
       start <= 0;
     else if (next == INIT)
       start <= 1;
-  assign over = state == END;
+  assign over = start && count_down == 0;
   logic during = start && ~over;
 
-  reg [$clog2(DOWN_TICK)+2:0] down_cnt = 0;
-  reg [$clog2(BAR_TICK)+2:0] bar_cnt = 0;
-  state_type next = NONE;
+  always_ff @(posedge clk)
+    if (~reset_n || ~during)
+      sec_cnt <= 0;
+    else if (sec_cnt == SEC_TICK-1)
+      sec_cnt <= 0;
+    else
+      sec_cnt <= sec_cnt + 1;
+
+  always_ff @(posedge clk)
+    if (~reset_n || ~start)
+      count_down <= COUNT_SEC;
+    else if (sec_cnt == SEC_TICK-1)
+      count_down <= count_down - 1;
 
   always_ff @(posedge clk)
     if (~reset_n || ~during)
