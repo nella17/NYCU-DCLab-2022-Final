@@ -4,6 +4,7 @@ module display(
   input  clk,
   input  reset_n,
 
+  input  start,
   input  [3:0] kind,
   input  [3:0] hold,
   input  [3:0] next [0:3],

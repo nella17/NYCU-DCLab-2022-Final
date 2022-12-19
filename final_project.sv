@@ -35,7 +35,7 @@ module final_project import enum_type::*;
   wire [9:0] tetris_bar_mask;
   wire [4*4-1:0] tetris_score;
   wire [3:0] tetris_kind, tetris_hold, tetris_next[0:3];
-  wire hold_locked;
+  wire hold_locked, start;
 
   wire [31:0] rng;
 
@@ -60,7 +60,8 @@ module final_project import enum_type::*;
     .uart_tx(uart_tx),
     .state(tetris_state),
     .control(tetris_ctrl),
-    .bar_mask(tetris_bar_mask)
+    .bar_mask(tetris_bar_mask),
+    .start(start)
   );
 
   tetris tetris0(
@@ -82,6 +83,7 @@ module final_project import enum_type::*;
   display display0(
     .clk(clk_50MHz),
     .reset_n(reset_n),
+    .start(start),
     .kind(tetris_kind),
     .hold(tetris_hold),
     .next(tetris_next),
