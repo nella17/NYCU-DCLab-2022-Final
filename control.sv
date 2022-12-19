@@ -101,7 +101,7 @@ module control import enum_type::*;
       else
         bar_cnt <= bar_cnt - BAR_TICK;
     else
-      bar_cnt <= bar_cnt + 1;
+      bar_cnt <= bar_cnt + rng[20+:3];
 
   always_comb
       if (received)
