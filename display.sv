@@ -4,16 +4,18 @@ module display(
   input  clk,
   input  reset_n,
 
-  input   [3:0] kind,
-  input   [4*4-1:0] tetris_score,
+  input  [3:0] kind,
+  input  [2:0] hold,
+  input  [2:0] next [0:3],
+  input  [4*4-1:0] tetris_score,
   output reg [4:0] tetris_x, tetris_y,
 
   // VGA specific I/O ports
-  output  VGA_HSYNC,
-  output  VGA_VSYNC,
-  output  [3:0] VGA_RED,
-  output  [3:0] VGA_GREEN,
-  output  [3:0] VGA_BLUE
+  output VGA_HSYNC,
+  output VGA_VSYNC,
+  output [3:0] VGA_RED,
+  output [3:0] VGA_GREEN,
+  output [3:0] VGA_BLUE
 );
 
   wire visible;         // when visible is 0, the VGA controller is sending

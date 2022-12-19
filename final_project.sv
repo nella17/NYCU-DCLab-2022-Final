@@ -82,6 +82,8 @@ module final_project import enum_type::*;
     .clk(clk_50MHz),
     .reset_n(reset_n),
     .kind(tetris_kind),
+    .hold(tetris_hold),
+    .next(tetris_next),
     .tetris_score(tetris_score),
     .tetris_x(tetris_x),
     .tetris_y(tetris_y),
