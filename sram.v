@@ -28,8 +28,7 @@
 
 
 module sram #(
-    parameter DATA_WIDTH = 8, ADDR_WIDTH = 9, RAM_SIZE = 512,
-        INIT_MEM = "images.mem"
+    parameter DATA_WIDTH = 8, ADDR_WIDTH = 9, RAM_SIZE = 512, FILE = "images.mem"
 )(
     input clk,
     input we, input en,
