@@ -154,13 +154,13 @@ module control import enum_type::*;
       else if (debounced_btn[1])
         next = DOWN;
       else if (debounced_btn[2])
-        next = LEFT;
+        next = ROTATE;
       else if (debounced_btn[3])
-        next = HOLD;
+        next = LEFT;
       else if (press_sw[0])
         next = DROP;
       else if (press_sw[1])
-        next = ROTATE;
+        next = HOLD;
       else if (press_sw[2])
         next = ROTATE_REV;
       else if (press_sw[3])

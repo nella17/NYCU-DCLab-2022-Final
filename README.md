@@ -59,7 +59,7 @@ wire [3:0] kind, hold, next [0:3];
 - NONE
 - LEFT
   - A
-  - btn2
+  - btn3
 - RIGHT
   - D
   - btn0
@@ -72,10 +72,10 @@ wire [3:0] kind, hold, next [0:3];
   - sw0
 - HOLD
   - C
-  - btn3
+  - sw1j
 - ROTATE
   - X
-  - sw1
+  - btn3
 - ROTATE_REV
   - Z
   - sw2
