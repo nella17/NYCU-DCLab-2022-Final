@@ -146,7 +146,7 @@ module control import enum_type::*;
     end else if (state == WAIT) begin
       cnt <= cnt == 0 ? 0 : cnt - (next == NONE);
       for (i = 0; i <= QSIZE; i++)
-        queue[i] <= i == cnt - 1 ? next : i == QSIZE ? NONE : queue[i+1];
+        queue[i] <= i == cnt ? next : i == QSIZE ? NONE : queue[i+1];
     end else begin
       cnt <= cnt + (next != NONE);
       queue[cnt] <= next;
