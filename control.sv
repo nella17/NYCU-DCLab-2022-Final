@@ -61,20 +61,10 @@ module control import enum_type::*;
 
   // sw
 
-  wire [3:0] debounced_sw;
   reg  [3:0] prev_sw;
   always_ff @(posedge clk)
-    prev_sw <= debounced_sw;
-  wire [3:0] press_sw = debounced_sw ^ prev_sw;
-
-  generate
-    for (gi = 0; gi <= 3; gi = gi + 1)
-      debounce debounce_sw(
-        .clk(clk),
-        .in(usr_sw[gi]),
-        .out(debounced_sw[gi])
-      );
-  endgenerate
+    prev_sw <= usr_sw;
+  wire [3:0] press_sw = usr_sw ^ prev_sw;
 
   // control
 
