@@ -24,6 +24,9 @@ module display(
   wire [9:0] pixel_x;   // x coordinate of the next pixel (between 0 ~ 639) 
   wire [9:0] pixel_y;   // y coordinate of the next pixel (between 0 ~ 479)
 
+  wire [4:0] block_x;
+  wire [4:0] block_y;
+
   //NEW ADD VARIABLEs
   // declare SRAM control signals
   wire [16:0] sram_addr;
@@ -131,7 +134,7 @@ module display(
   assign tetris_y = ~inside_tetris ? 0 : (pixel_y -  40) / 20;
   assign block_x  = ~inside_tetris ? 0 : (pixel_x - 220) % 20;
   assign block_y  = ~inside_tetris ? 0 : (pixel_y -  40) % 20;
-  //assign ctrl = debounced_btn[0] ? 2'b00 : debounced_btn[1] ? 2'b01 : debounced_btn[2] ? 2'b10 : 2'b11;
+
   assign inside_tetris = (220 <= pixel_x) & (pixel_x < 420) & (40 <= pixel_y) & (pixel_y < 440);
   assign inside_scoreboard[0] = (64*2 <= pixel_x) & (pixel_x < 69*2) & (225*2 <= pixel_y) & (pixel_y < 234*2);
   assign inside_scoreboard[1] = (71*2 <= pixel_x) & (pixel_x < 76*2) & (225*2 <= pixel_y) & (pixel_y < 234*2);
