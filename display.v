@@ -6,7 +6,7 @@ module display(
 
   input   [3:0] kind,
   input   [4*4-1:0] tetris_score,
-  output  [4:0] tetris_x, tetris_y,
+  output reg [4:0] tetris_x, tetris_y,
 
   // VGA specific I/O ports
   output  VGA_HSYNC,
@@ -23,8 +23,8 @@ module display(
   wire [9:0] pixel_x;   // x coordinate of the next pixel (between 0 ~ 639) 
   wire [9:0] pixel_y;   // y coordinate of the next pixel (between 0 ~ 479)
 
-  wire [4:0] block_x;
-  wire [4:0] block_y;
+  reg [4:0] block_x;
+  reg [4:0] block_y;
 
   //NEW ADD VARIABLEs
   // declare SRAM control signals
@@ -128,11 +128,13 @@ module display(
     end
     else pixel_addr <= block_addr[7];
   end
-
-  assign tetris_x = ~inside_tetris ? 0 : (pixel_x - 220) / 20;
-  assign tetris_y = ~inside_tetris ? 0 : (pixel_y -  40) / 20;
-  assign block_x  = ~inside_tetris ? 0 : (pixel_x - 220) % 20;
-  assign block_y  = ~inside_tetris ? 0 : (pixel_y -  40) % 20;
+  
+  always @(posedge clk) begin
+    tetris_x = ~inside_tetris ? 0 : (pixel_x - 220) / 20;
+    tetris_y = ~inside_tetris ? 0 : (pixel_y -  40) / 20;
+    block_x  = ~inside_tetris ? 0 : (pixel_x - 220) % 20;
+    block_y  = ~inside_tetris ? 0 : (pixel_y -  40) % 20;
+  end
 
   assign inside_tetris = (220 <= pixel_x) & (pixel_x < 420) & (40 <= pixel_y) & (pixel_y < 440);
   assign inside_scoreboard[0] = (64*2 <= pixel_x) & (pixel_x < 69*2) & (225*2 <= pixel_y) & (pixel_y < 234*2);
