@@ -17,6 +17,13 @@ module display(
   output  [3:0] VGA_BLUE
 );
 
+  wire visible;         // when visible is 0, the VGA controller is sending
+                        // synchronization signals to the display device.
+  wire p_tick;          // when p_tick is 1, we must update the RGB value
+                        // based for the new coordinate (pixel_x, pixel_y)
+  wire [9:0] pixel_x;   // x coordinate of the next pixel (between 0 ~ 639) 
+  wire [9:0] pixel_y;   // y coordinate of the next pixel (between 0 ~ 479)
+
   //NEW ADD VARIABLEs
   // declare SRAM control signals
   wire [16:0] sram_addr;
