@@ -14,9 +14,9 @@ module tetris import enum_type::*;
 
   output state_type state,
   output reg [4*4-1:0] score,  // 0xABCD BCD
-  output reg [2:0] kind,
-  output reg [2:0] hold,
-  output reg [2:0] next [0:3]
+  output reg [3:0] kind,
+  output reg [3:0] hold,
+  output reg [3:0] next [0:3]
 );
   genvar gi;
 
@@ -126,7 +126,7 @@ module tetris import enum_type::*;
   state_type next_state;
 
   // registers
-  reg [2:0] curr_kind  = 0,
+  reg [3:0] curr_kind  = 0,
             check_kind = 0;
   reg [4:0] curr_x_offset  = 0,
             curr_y_offset  = 0,

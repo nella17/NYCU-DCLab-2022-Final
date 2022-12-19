@@ -6,7 +6,8 @@
     - [ ] 畫出俄羅斯方塊的背景。 10 x 20
     - [x] 畫出至少7種不同方塊。  
       1.I 2.J 3.L 4.O 5.S 6.T 7.Z  
-      ![](https://learnopencv.com/wp-content/uploads/2020/11/tetris-pieces.png)
+      0.none 8.bar
+         ![](https://learnopencv.com/wp-content/uploads/2020/11/tetris-pieces.png)
     - [x] 會越疊愈高，並且可消除，往下掉。
     - [x] 方塊可旋轉。
     - [ ] 遊戲畫面有邊界。
@@ -46,7 +47,7 @@ Display --> VGA;
 wire [4:0] x, y;
 // x, y -> kind
 wire [4*4-1:0] score; // 0xABCD BCD
-wire [2:0] kind, hold, next [0:3];
+wire [3:0] kind, hold, next [0:3];
 ```
 
 ### Control

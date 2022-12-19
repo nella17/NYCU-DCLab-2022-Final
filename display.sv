@@ -5,8 +5,8 @@ module display(
   input  reset_n,
 
   input  [3:0] kind,
-  input  [2:0] hold,
-  input  [2:0] next [0:3],
+  input  [3:0] hold,
+  input  [3:0] next [0:3],
   input  [4*4-1:0] tetris_score,
   output reg [4:0] tetris_x, tetris_y,
 

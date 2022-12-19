@@ -35,7 +35,7 @@ module final_project import enum_type::*;
   state_type tetris_ctrl, tetris_state;
   wire [9:0] tetris_bar_mask;
   wire [4*4-1:0] tetris_score;
-  wire [2:0] tetris_kind, tetris_hold, tetris_next[0:3];
+  wire [3:0] tetris_kind, tetris_hold, tetris_next[0:3];
 
   wire [31:0] rng;
 
