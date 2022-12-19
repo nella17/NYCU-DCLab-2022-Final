@@ -17,6 +17,7 @@ module control import enum_type::*;
 
   localparam QSIZE = 16;
   localparam DOWN_TICK = 50_000_000;
+  localparam BAR_TICK  = 500_000_000;
 
   // uart
 
@@ -77,6 +78,7 @@ module control import enum_type::*;
   // control
 
   reg [$clog2(DOWN_TICK)+2:0] down_cnt = 0;
+  reg [$clog2(BAR_TICK)+2:0] bar_cnt = 0;
   state_type next = NONE;
 
   always_ff @(posedge clk)
@@ -89,6 +91,17 @@ module control import enum_type::*;
         down_cnt <= down_cnt - DOWN_TICK;
     else
       down_cnt <= down_cnt + 1;
+
+  always_ff @(posedge clk)
+    if (~reset_n)
+      bar_cnt <= 0;
+    else if (next == BAR)
+      if (bar_cnt < BAR_TICK)
+        bar_cnt <= 0;
+      else
+        bar_cnt <= bar_cnt - BAR_TICK;
+    else
+      bar_cnt <= bar_cnt + 1;
 
   always_comb
       if (received)
@@ -130,6 +143,8 @@ module control import enum_type::*;
         next = BAR;
       else if (down_cnt >= DOWN_TICK)
         next = DOWN;
+      else if (bar_cnt >= BAR_TICK)
+        next = BAR;
       else
         next = NONE;
 
