@@ -4,6 +4,11 @@ module display(
   input  clk,
   input  reset_n,
 
+  input   [3:0] kind,
+  input   [4*4-1:0] tetris_score,
+  output  [3:0] tetris_x,
+  output  [4:0] tetris_y,
+
   // VGA specific I/O ports
   output  VGA_HSYNC,
   output  VGA_VSYNC,
@@ -22,8 +27,11 @@ module display(
   wire [11:0] bg_in;
   wire [11:0] bg_out;
   assign data_in = 12'h000;
-  assign sram_we = usr_btn[3];         // MAY HAVE TROUBLE !!!!!!!
+  assign sram_we = 0;         // MAY HAVE TROUBLE !!!!!!!
   assign sram_en = 1;          // Here, we always enable the SRAM block.
+
+  wire inside_scoreboard[0:3];
+  wire  [3:0] score_dec [0:3];
 
   reg  [11:0] rgb_reg;  // RGB value for the current pixel
   reg  [11:0] rgb_next; // RGB value for the next pixel
@@ -112,7 +120,6 @@ module display(
     else pixel_addr <= block_addr[7];
   end
 
-  assign kind = tetris_board[(tetris_y*10+tetris_x)*3 +: 3];
   assign tetris_x = ~inside_tetris ? 0 : (pixel_x - 220) / 20;
   assign tetris_y = ~inside_tetris ? 0 : (pixel_y -  40) / 20;
   assign block_x  = ~inside_tetris ? 0 : (pixel_x - 220) % 20;
@@ -123,10 +130,10 @@ module display(
   assign inside_scoreboard[1] = (71*2 <= pixel_x) & (pixel_x < 76*2) & (225*2 <= pixel_y) & (pixel_y < 234*2);
   assign inside_scoreboard[2] = (78*2 <= pixel_x) & (pixel_x < 83*2) & (225*2 <= pixel_y) & (pixel_y < 234*2);
   assign inside_scoreboard[3] = (85*2 <= pixel_x) & (pixel_x < 90*2) & (225*2 <= pixel_y) & (pixel_y < 234*2);
-  assign score_dec[3] = tetris_score % 10;
-  assign score_dec[2] = (tetris_score / 10) % 10;
-  assign score_dec[1] = (tetris_score / 100) % 10;
-  assign score_dec[0] = (tetris_score / 1000) % 10;
+  assign score_dec[3] = tetris_score[ 0+:4];
+  assign score_dec[2] = tetris_score[ 4+:4];
+  assign score_dec[1] = tetris_score[ 8+:4];
+  assign score_dec[0] = tetris_score[12+:4];
 
   // ------------------------------------------------------------------------
   // Send the video data in the sram to the VGA controller

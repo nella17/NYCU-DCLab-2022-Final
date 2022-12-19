@@ -29,6 +29,8 @@ module final_project import enum_type::*;
   // General VGA control signals
   wire clk_50MHz;       // 50MHz clock for VGA control
 
+  wire [3:0] tetris_x;
+  wire [4:0] tetris_y;
   reg inside_tetris;
   state_type tetris_ctrl, tetris_state;
   wire [9:0] tetris_bar_mask = 10'b1110111111;
@@ -69,6 +71,10 @@ module final_project import enum_type::*;
   display display0(
     .clk(clk_50MHz),
     .reset_n(reset_n),
+    .kind(tetris_kind),
+    .tetris_score(tetris_score),
+    .tetris_x(tetris_x), 
+    .tetris_y(tetris_y),
     .VGA_HSYNC(VGA_HSYNC),
     .VGA_VSYNC(VGA_VSYNC),
     .VGA_RED(VGA_RED),
