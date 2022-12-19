@@ -7,6 +7,7 @@ module display(
   input  [3:0] kind,
   input  [3:0] hold,
   input  [3:0] next [0:3],
+  input  hold_locked,
   input  [4*4-1:0] tetris_score,
   output reg [4:0] tetris_x, tetris_y,
 
