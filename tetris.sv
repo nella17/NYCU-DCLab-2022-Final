@@ -376,7 +376,7 @@ module tetris import enum_type::*;
 
   reg [4:0] score_carry = 0;
   always_ff @(posedge clk)
-      if (~reset_n || state == INIT || ~do_clear)
+      if (~reset_n || ~do_clear || state != CLEAR)
           score_carry[0] <= 0;
       else
           score_carry[0] <= 1;
