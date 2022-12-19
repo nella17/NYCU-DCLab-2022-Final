@@ -272,10 +272,12 @@ module tetris import enum_type::*;
       case (state)
         GEN: begin
           curr_kind <= next[0];
-          next[0] <= next[1];
-          next[1] <= next[2];
-          next[2] <= next[3];
-          next[3] <= (next[3] == 7) ? 1 : next[3] + 1;
+          next <= {
+            next[1], 
+            next[2],
+            next[3],
+            (next[3] == 7) ? 1 : next[3] + 1
+          };
           curr_mask <= gen_mask;
           curr_x_offset <= 5;
           curr_y_offset <= 0;
