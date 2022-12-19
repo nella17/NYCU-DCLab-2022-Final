@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module tb_tetris import enum_type::*;;
+module tetris_tb import enum_type::*;;
 
   reg clk;
   reg reset_n;

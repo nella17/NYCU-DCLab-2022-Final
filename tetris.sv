@@ -6,9 +6,9 @@ module tetris import enum_type::*;
 (
   input clk,
   input reset_n,
+  input [31:0] rng,
 
-  input [3:0] x,  // [0, 10)
-  input [4:0] y,  // [0, 20)
+  input [4:0] x, y,  // [0, 10), [0, 20)
   input state_type ctrl,
   input [9:0] bar_mask,
 
@@ -69,7 +69,7 @@ module tetris import enum_type::*;
   };
 
   // [kind][rotate_idx]
-  localparam [1:0] min_x_offset [1:7][0:3] = '{
+  localparam [4:0] min_x_offset [1:7][0:3] = '{
     '{ 2, 0, 2, 1 },
     '{ 2, 1, 2, 2 },
     '{ 2, 1, 2, 2 },
@@ -80,7 +80,7 @@ module tetris import enum_type::*;
   };
 
   // [kind][rotate_idx]
-  localparam [3:0] max_x_offset [1:7][0:3] = '{
+  localparam [4:0] max_x_offset [1:7][0:3] = '{
     '{  8,  9,  8, 10 },
     '{  9,  9,  9, 10 },
     '{  9,  9,  9, 10 },
@@ -105,43 +105,43 @@ module tetris import enum_type::*;
 
   // nets
   wire [7:0] read_addr;
-  wire [219:0] placed_mask;
-  wire outside;
-  wire boutside;
-  wire valid;
-  wire [1:0] next_rotate_idx;
-  wire [1:0] next_rotate_rev_idx;
-  wire [3:0] left_x_offset;
-  wire [3:0] right_x_offset;
-  wire [4:0] down_y_offset;
+  wire outside,
+       boutside,
+       valid,
+       do_clear;
+  wire [1:0] next_rotate_idx,
+             next_rotate_rev_idx;
+  wire [4:0] left_x_offset,
+             right_x_offset,
+             down_y_offset;
   wire [2:0] hold_kind;
-  wire [219:0] gen_mask;
-  wire [219:0] hold_mask;
-  wire [219:0] rotate_mask;
-  wire [219:0] rotate_rev_mask;
-  wire [219:0] left_mask;
-  wire [219:0] right_mask;
-  wire [219:0] down_mask;
-  wire do_clear;
+  wire [219:0] placed_mask,
+               gen_mask,
+               hold_mask,
+               rotate_mask,
+               rotate_rev_mask,
+               left_mask,
+               right_mask,
+               down_mask;
   state_type next_state;
 
   // registers
-  reg [199:0] placed_kind [2:0];
-  reg [2:0] curr_kind;
-  reg [219:0] curr_mask;
-  reg [3:0] curr_x_offset;
-  reg [4:0] curr_y_offset;
-  reg [1:0] curr_rotate_idx;
-  reg [2:0] check_kind;
-  reg [219:0] check_mask;
-  reg [3:0] check_x_offset;
-  reg [4:0] check_y_offset;
-  reg [1:0] check_rotate_idx;
-  reg [199:0] test_mask;
-  reg [199:0] clear_mask;
-  reg [4:0] clear_counter;
-  reg [199:0] pending_mask;
-  reg [4:0] pending_counter;
+  reg [2:0] curr_kind  = 0,
+            check_kind = 0;
+  reg [4:0] curr_x_offset  = 0,
+            curr_y_offset  = 0,
+            check_x_offset = 0,
+            check_y_offset = 0;
+  reg [1:0] curr_rotate_idx  = 0,
+            check_rotate_idx = 0;
+  reg [219:0] curr_mask  = 0,
+              check_mask = 0;
+  reg [199:0] placed_kind [2:0] = { 0, 0, 0 },
+              test_mask = 0,
+              clear_mask = 0,
+              pending_mask = 0;
+  reg [4:0] clear_counter   = 0,
+            pending_counter = 0;
 
   // comb logic --------------------------------------------------
 
@@ -226,7 +226,7 @@ module tetris import enum_type::*;
       MCHECK:
         next_state = WAIT;
       HCHECK:
-        if (hold == 0) 
+        if (hold == 0)
           next_state = GEN;
         else
           next_state = WAIT;
@@ -261,117 +261,122 @@ module tetris import enum_type::*;
   always_ff @(posedge clk)
     state <= next_state;
 
-  always @(posedge clk) begin
-    case (state)
-      INIT: begin
-        hold <= 0;
-        curr_kind <= 0;
-        next[0] <= 1;
-        next[1] <= 2;
-        next[2] <= 3;
-        next[3] <= 4;
-        placed_kind[2] <= 0;
-        placed_kind[1] <= 0;
-        placed_kind[0] <= 0;
-        pending_mask <= 0;
-        pending_counter <= 0;
-      end
-      GEN: begin
-        curr_kind <= next[0];
-        next[0] <= next[1];
-        next[1] <= next[2];
-        next[2] <= next[3];
-        next[3] <= (next[3] == 7) ? 1 : next[3] + 1;
-        curr_mask <= gen_mask;
-        curr_x_offset <= 5;
-        curr_y_offset <= 0;
-        curr_rotate_idx <= 0;
-      end
-      HOLD: begin
-        check_kind <= hold_kind;
-        check_mask <= hold_mask;
-        check_x_offset <= 5;
-        check_y_offset <= 0;
-        check_rotate_idx <= 0;
-      end
-      ROTATE: begin
-        check_kind <= curr_kind;
-        check_mask <= rotate_mask;
-        check_x_offset <= curr_x_offset;
-        check_y_offset <= curr_y_offset;
-        check_rotate_idx <= next_rotate_idx;
-      end
-      ROTATE_REV: begin
-        check_kind <= curr_kind;
-        check_mask <= rotate_rev_mask;
-        check_x_offset <= curr_x_offset;
-        check_y_offset <= curr_y_offset;
-        check_rotate_idx <= next_rotate_rev_idx;
-      end
-      LEFT: begin
-        check_kind <= curr_kind;
-        check_mask <= left_mask;
-        check_x_offset <= left_x_offset;
-        check_y_offset <= curr_y_offset;
-        check_rotate_idx <= curr_rotate_idx;
-      end
-      RIGHT: begin
-        check_kind <= curr_kind;
-        check_mask <= right_mask;
-        check_x_offset <= right_x_offset;
-        check_y_offset <= curr_y_offset;
-        check_rotate_idx <= curr_rotate_idx;
-      end
-      DOWN, DROP: begin
-        check_kind <= curr_kind;
-        check_mask <= down_mask;
-        check_x_offset <= curr_x_offset;
-        check_y_offset <= down_y_offset;
-        check_rotate_idx <= curr_rotate_idx;
-      end
-      BAR: begin
-        pending_mask <= {pending_mask[189:0], bar_mask};
-        pending_counter <= pending_counter + 1;
-      end
-      PCHECK, DCHECK, MCHECK, HCHECK: begin
-        if (valid) begin
-          curr_kind <= check_kind;
-          curr_mask <= check_mask;
-          curr_x_offset <= check_x_offset;
-          curr_y_offset <= check_y_offset;
-          curr_rotate_idx <= check_rotate_idx;
-          if (state == HCHECK) hold <= curr_kind;
+  always_ff @(posedge clk) begin
+    if (~reset_n || state == INIT) begin
+      hold <= 0;
+      curr_kind <= 0;
+      next <= {
+        rng[0+:3],
+        rng[3+:3],
+        rng[6+:3],
+        rng[9+:3]
+      };
+      placed_kind <= { 0, 0, 0 };
+      pending_mask <= 0;
+      pending_counter <= 0;
+    end else begin
+      case (state)
+        GEN: begin
+          curr_kind <= next[0];
+          next <= {
+            next[1], 
+            next[2],
+            next[3],
+            rng[0+:3]
+          };
+          curr_mask <= gen_mask;
+          curr_x_offset <= 5;
+          curr_y_offset <= 0;
+          curr_rotate_idx <= 0;
         end
-        else if ((state == PCHECK || state == DCHECK)) begin
-          curr_mask <= 0;
-          placed_kind[2] <= placed_kind[2] | (curr_mask[199:0] & {200{curr_kind[2]}});
-          placed_kind[1] <= placed_kind[1] | (curr_mask[199:0] & {200{curr_kind[1]}});
-          placed_kind[0] <= placed_kind[0] | (curr_mask[199:0] & {200{curr_kind[0]}});
+        HOLD: begin
+          check_kind <= hold_kind;
+          check_mask <= hold_mask;
+          check_x_offset <= 5;
+          check_y_offset <= 0;
+          check_rotate_idx <= 0;
         end
-      end
-      CPREP: begin
-        test_mask <= placed_mask;
-        clear_mask <= {200{1'b1}};
-        clear_counter <= 0;
-      end
-      CLEAR: begin
-        test_mask <= test_mask >> 10;
-        clear_mask <= clear_mask << 10;
-        clear_counter <= clear_counter + 1;
-        if (do_clear) begin
-          placed_kind[2] <= (placed_kind[2] & ~clear_mask) | ((placed_kind[2] >> 10) & clear_mask);
-          placed_kind[1] <= (placed_kind[1] & ~clear_mask) | ((placed_kind[1] >> 10) & clear_mask);
-          placed_kind[0] <= (placed_kind[0] & ~clear_mask) | ((placed_kind[0] >> 10) & clear_mask);
+        ROTATE: begin
+          check_kind <= curr_kind;
+          check_mask <= rotate_mask;
+          check_x_offset <= curr_x_offset;
+          check_y_offset <= curr_y_offset;
+          check_rotate_idx <= next_rotate_idx;
         end
-      end
-      BPLACE: begin
-        placed_kind[2] <= (placed_kind[2] << (10 * pending_counter)) | pending_mask;
-        placed_kind[1] <= (placed_kind[1] << (10 * pending_counter)) | pending_mask;
-        placed_kind[0] <= (placed_kind[0] << (10 * pending_counter)) | pending_mask;
-        pending_mask <= 0;
-        pending_counter <= 0;
-      end
-    endcase
+        ROTATE_REV: begin
+          check_kind <= curr_kind;
+          check_mask <= rotate_rev_mask;
+          check_x_offset <= curr_x_offset;
+          check_y_offset <= curr_y_offset;
+          check_rotate_idx <= next_rotate_rev_idx;
+        end
+        LEFT: begin
+          check_kind <= curr_kind;
+          check_mask <= left_mask;
+          check_x_offset <= left_x_offset;
+          check_y_offset <= curr_y_offset;
+          check_rotate_idx <= curr_rotate_idx;
+        end
+        RIGHT: begin
+          check_kind <= curr_kind;
+          check_mask <= right_mask;
+          check_x_offset <= right_x_offset;
+          check_y_offset <= curr_y_offset;
+          check_rotate_idx <= curr_rotate_idx;
+        end
+        DOWN, DROP: begin
+          check_kind <= curr_kind;
+          check_mask <= down_mask;
+          check_x_offset <= curr_x_offset;
+          check_y_offset <= down_y_offset;
+          check_rotate_idx <= curr_rotate_idx;
+        end
+        BAR: begin
+          if (bar_mask) begin
+            pending_mask <= { pending_mask[189:0], (bar_mask ^ 10'b1111111111) };
+            pending_counter <= pending_counter + 1;
+          end
+        end
+        PCHECK, DCHECK, MCHECK, HCHECK: begin
+          if (valid) begin
+            curr_kind <= check_kind;
+            curr_mask <= check_mask;
+            curr_x_offset <= check_x_offset;
+            curr_y_offset <= check_y_offset;
+            curr_rotate_idx <= check_rotate_idx;
+            if (state == HCHECK) hold <= curr_kind;
+          end
+          else if ((state == PCHECK || state == DCHECK)) begin
+            curr_mask <= 0;
+            placed_kind[2] <= placed_kind[2] | (curr_mask[199:0] & {200{curr_kind[2]}});
+            placed_kind[1] <= placed_kind[1] | (curr_mask[199:0] & {200{curr_kind[1]}});
+            placed_kind[0] <= placed_kind[0] | (curr_mask[199:0] & {200{curr_kind[0]}});
+          end
+        end
+        CPREP: begin
+          test_mask <= placed_mask;
+          clear_mask <= {200{1'b1}};
+          clear_counter <= 0;
+        end
+        CLEAR: begin
+          test_mask <= test_mask >> 10;
+          clear_mask <= clear_mask << 10;
+          clear_counter <= clear_counter + 1;
+          if (do_clear) begin
+            placed_kind[2] <= (placed_kind[2] & ~clear_mask) | ((placed_kind[2] >> 10) & clear_mask);
+            placed_kind[1] <= (placed_kind[1] & ~clear_mask) | ((placed_kind[1] >> 10) & clear_mask);
+            placed_kind[0] <= (placed_kind[0] & ~clear_mask) | ((placed_kind[0] >> 10) & clear_mask);
+          end
+        end
+        BPLACE: begin
+          placed_kind[2] <= (placed_kind[2] << (10 * pending_counter)) | pending_mask;
+          placed_kind[1] <= (placed_kind[1] << (10 * pending_counter)) | pending_mask;
+          placed_kind[0] <= (placed_kind[0] << (10 * pending_counter)) | pending_mask;
+          pending_mask <= 0;
+          pending_counter <= 0;
+        end
+      endcase
+    end
   end
 
   reg [4:0] score_carry = 0;

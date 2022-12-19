@@ -8,6 +8,7 @@ module final_project import enum_type::*;
   input  clk,
   input  reset_n,
   input  [3:0] usr_btn,
+  input  [3:0] usr_sw,
   output [3:0] usr_led,
 
   // VGA specific I/O ports
@@ -29,36 +30,45 @@ module final_project import enum_type::*;
   // General VGA control signals
   wire clk_50MHz;       // 50MHz clock for VGA control
 
-  wire [3:0] tetris_x;
-  wire [4:0] tetris_y;
-  reg inside_tetris;
+  wire inside_tetris;
+  wire [4:0] tetris_x, tetris_y;
   state_type tetris_ctrl, tetris_state;
-  wire [9:0] tetris_bar_mask = 10'b1110111111;
+  wire [9:0] tetris_bar_mask;
   wire [4*4-1:0] tetris_score;
-  wire [2:0] tetris_kind;
-  wire [2:0] tetris_hold;
-  wire [2:0] tetris_next [0:3];
+  wire [2:0] tetris_kind, tetris_hold, tetris_next[0:3];
+
+  wire [31:0] rng;
 
   clk_wiz_0 clk_wiz_0_0(
     .clk_50MHz(clk_50MHz),
     .clk_in1(clk)
   );
 
-  control control(
+  prng prng0(
     .clk(clk_50MHz),
     .reset_n(reset_n),
+    .rng(rng)
+  );
+
+  control control0(
+    .clk(clk_50MHz),
+    .reset_n(reset_n),
+    .rng(rng),
     .usr_btn(usr_btn),
+    .usr_sw(usr_sw),
     .uart_rx(uart_rx),
     .uart_tx(uart_tx),
     .state(tetris_state),
-    .control(tetris_ctrl)
+    .control(tetris_ctrl),
+    .bar_mask(tetris_bar_mask)
   );
 
   tetris tetris0(
     .clk(clk_50MHz),
     .reset_n(reset_n),
-    .x(tetris_x), 
-    .y(tetris_y), 
+    .rng(rng),
+    .x(tetris_x),
+    .y(tetris_y),
     .ctrl(tetris_ctrl),
     .bar_mask(tetris_bar_mask),
     .state(tetris_state),
@@ -73,7 +83,7 @@ module final_project import enum_type::*;
     .reset_n(reset_n),
     .kind(tetris_kind),
     .tetris_score(tetris_score),
-    .tetris_x(tetris_x), 
+    .tetris_x(tetris_x),
     .tetris_y(tetris_y),
     .VGA_HSYNC(VGA_HSYNC),
     .VGA_VSYNC(VGA_VSYNC),
@@ -89,7 +99,7 @@ module final_project import enum_type::*;
   reg [127:0] row_A = row_init;
   reg [127:0] row_B = row_init;
 
-  LCD_module lcd0( 
+  LCD_module lcd0(
     .clk(clk_50MHz),
     .reset(~reset_n),
     .row_A(row_A),
@@ -100,14 +110,15 @@ module final_project import enum_type::*;
     .LCD_D(LCD_D)
   );
 
-  reg [7:0] i;
   wire [7:0] ns = tetris_state;
-  reg [7:0] nc;
+  reg [7:0] nc = 0;
   always_ff @(posedge clk_50MHz)
       if (~reset_n)
           nc <= 0;
       else if (tetris_ctrl != NONE)
           nc <= tetris_ctrl;
+
+  reg [7:0] i;
   always_ff @(posedge clk_50MHz) begin
     if (~reset_n)
       { row_A, row_B } <= { row_init, row_init };

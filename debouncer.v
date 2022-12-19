@@ -1,23 +1,23 @@
 `timescale 1ns / 1ps
 module debouncer(
     input clk,
-    input btn,
-    output debounced_btn
+    input in,
+    output out
 );
     parameter PRESS_CLOCK_THR = 500000; // 10ms
     parameter LONG_PRESS_THR = 12500000; // 250ms
     parameter CONTINUOUS_PRESS_THR = 2500000; // 50ms
-    
+
     localparam WAIT_PRESS = 0;
     localparam WAIT_LONG = 1;
     localparam AFTER_LONG = 2;
-    
+
     reg [1:0] state = 0;
     reg [$clog2(LONG_PRESS_THR)-1:0] counter = 0;
-    assign debounced_btn = ((state == WAIT_LONG || state == AFTER_LONG) && counter == 0);
-    
+    assign out = ((state == WAIT_LONG || state == AFTER_LONG) && counter == 0);
+
     always @(posedge clk) begin
-        if (~btn) begin
+        if (~in) begin
             state <= WAIT_PRESS;
             counter <= 0;
         end

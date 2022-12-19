@@ -6,8 +6,7 @@ module display(
 
   input   [3:0] kind,
   input   [4*4-1:0] tetris_score,
-  output  [3:0] tetris_x,
-  output  [4:0] tetris_y,
+  output  [4:0] tetris_x, tetris_y,
 
   // VGA specific I/O ports
   output  VGA_HSYNC,
