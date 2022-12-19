@@ -25,11 +25,10 @@ module display(
                         // synchronization signals to the display device.
   wire p_tick;          // when p_tick is 1, we must update the RGB value
                         // based for the new coordinate (pixel_x, pixel_y)
-  wire [9:0] pixel_x;   // x coordinate of the next pixel (between 0 ~ 639) 
-  wire [9:0] pixel_y;   // y coordinate of the next pixel (between 0 ~ 479)
+  wire [9:0] pixel_x2, pixel_y2; // [0,640), [0,480)
+  wire [8:0] pixel_x, pixel_y; // [0,320), [0,240)
 
-  reg [4:0] block_x;
-  reg [4:0] block_y;
+  reg [4:0] block_x, block_y;
 
   //NEW ADD VARIABLEs
   // declare SRAM control signals
@@ -93,8 +92,10 @@ module display(
   vga_sync_reg vs0(
     .clk(clk), .reset(~reset_n), .oHS(VGA_HSYNC), .oVS(VGA_VSYNC),
     .visible(visible), .p_tick(p_tick),
-    .pixel_x(pixel_x), .pixel_y(pixel_y)
+    .pixel_x(pixel_x2), .pixel_y(pixel_y2)
   );
+  assign pixel_x = pixel_x2 >> 1;
+  assign pixel_y = pixel_y2 >> 1;
 
   sram #(.DATA_WIDTH(12), .ADDR_WIDTH(17), .RAM_SIZE(BG_W*BG_H), .FILE("images.mem"))
     ram0 (.clk(clk), .we(sram_we), .en(sram_en),
@@ -119,32 +120,32 @@ module display(
       endcase
     end
     else if (inside_scoreboard[0]) begin
-      pixel_addr <= num_addr[score_dec[0]] + ((pixel_x - 64*2)>>1) + ((pixel_y - 225*2)>>1) * NUM_W;
+      pixel_addr <= num_addr[score_dec[0]] + (pixel_x - 64) + (pixel_y - 225) * NUM_W;
     end
     else if (inside_scoreboard[1]) begin
-      pixel_addr <= num_addr[score_dec[1]] + ((pixel_x - 71*2)>>1) + ((pixel_y - 225*2)>>1) * NUM_W;
+      pixel_addr <= num_addr[score_dec[1]] + (pixel_x - 71) + (pixel_y - 225) * NUM_W;
     end
     else if (inside_scoreboard[2]) begin
-      pixel_addr <= num_addr[score_dec[2]] + ((pixel_x - 78*2)>>1) + ((pixel_y - 225*2)>>1) * NUM_W;
+      pixel_addr <= num_addr[score_dec[2]] + (pixel_x - 78) + (pixel_y - 225) * NUM_W;
     end
     else if (inside_scoreboard[3]) begin
-      pixel_addr <= num_addr[score_dec[3]] + ((pixel_x - 85*2)>>1) + ((pixel_y - 225*2)>>1) * NUM_W;
+      pixel_addr <= num_addr[score_dec[3]] + (pixel_x - 85) + (pixel_y - 225) * NUM_W;
     end
     else pixel_addr <= block_addr[7];
   end
-  
+
   always @(posedge clk) begin
-    tetris_x = ~inside_tetris ? 0 : (pixel_x - 220) / 20;
-    tetris_y = ~inside_tetris ? 0 : (pixel_y -  40) / 20;
-    block_x  = ~inside_tetris ? 0 : (pixel_x - 220) % 20;
-    block_y  = ~inside_tetris ? 0 : (pixel_y -  40) % 20;
+    tetris_x <= ~inside_tetris ? 0 : (pixel_x2 - 220) / 20;
+    tetris_y <= ~inside_tetris ? 0 : (pixel_y2 -  40) / 20;
+    block_x  <= ~inside_tetris ? 0 : (pixel_x2 - 220) % 20;
+    block_y  <= ~inside_tetris ? 0 : (pixel_y2 -  40) % 20;
   end
 
-  assign inside_tetris = (220 <= pixel_x) & (pixel_x < 420) & (40 <= pixel_y) & (pixel_y < 440);
-  assign inside_scoreboard[0] = (64*2 <= pixel_x) & (pixel_x < 69*2) & (225*2 <= pixel_y) & (pixel_y < 234*2);
-  assign inside_scoreboard[1] = (71*2 <= pixel_x) & (pixel_x < 76*2) & (225*2 <= pixel_y) & (pixel_y < 234*2);
-  assign inside_scoreboard[2] = (78*2 <= pixel_x) & (pixel_x < 83*2) & (225*2 <= pixel_y) & (pixel_y < 234*2);
-  assign inside_scoreboard[3] = (85*2 <= pixel_x) & (pixel_x < 90*2) & (225*2 <= pixel_y) & (pixel_y < 234*2);
+  assign inside_tetris = (220 <= pixel_x2) & (pixel_x2 < 420) & (40 <= pixel_y2) & (pixel_y2 < 440);
+  assign inside_scoreboard[0] = (64 <= pixel_x) & (pixel_x < 69) & (225 <= pixel_y) & (pixel_y < 234);
+  assign inside_scoreboard[1] = (71 <= pixel_x) & (pixel_x < 76) & (225 <= pixel_y) & (pixel_y < 234);
+  assign inside_scoreboard[2] = (78 <= pixel_x) & (pixel_x < 83) & (225 <= pixel_y) & (pixel_y < 234);
+  assign inside_scoreboard[3] = (85 <= pixel_x) & (pixel_x < 90) & (225 <= pixel_y) & (pixel_y < 234);
   assign score_dec[3] = tetris_score[ 0+:4];
   assign score_dec[2] = tetris_score[ 4+:4];
   assign score_dec[1] = tetris_score[ 8+:4];
@@ -174,7 +175,7 @@ module display(
     if (~reset_n)
       bg_addr_reg <= 0;
     else 
-      bg_addr_reg <= (pixel_y >> 1) * BG_W + (pixel_x >> 1);
+      bg_addr_reg <= pixel_y * BG_W + pixel_x;
   end
 
 endmodule
