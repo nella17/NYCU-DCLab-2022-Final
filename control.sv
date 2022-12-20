@@ -184,9 +184,13 @@ module control import enum_type::*;
       for (i = 0; i <= QSIZE; i++)
         queue[i] <= NONE;
     end else if (state == WAIT) begin
-      cnt <= cnt == 0 ? 0 : cnt - (next == NONE);
-      for (i = 0; i <= QSIZE; i++)
-        queue[i] <= i == cnt ? next : i == QSIZE ? NONE : queue[i+1];
+      if (cnt == 0) begin
+        queue[0] <= next;
+      end else begin
+        cnt <= cnt - (next == NONE);
+        for (i = 0; i <= QSIZE; i++)
+          queue[i] <= i == cnt ? next : i == QSIZE ? NONE : queue[i+1];
+      end
     end else begin
       cnt <= cnt + (next != NONE);
       queue[cnt] <= next;
