@@ -121,57 +121,55 @@ module control import enum_type::*;
     else
       bar_cnt <= bar_cnt + rng[20+:3];
 
-  always_comb
-    if (~during) begin
-      if (received || |debounced_btn || |press_sw)
-        next = INIT;
-      else
-        next = NONE;
-    end else begin
-      if (received)
-        case (rx_byte)
-          "A", "a":
-            next = LEFT;
-          "D", "d":
-            next = RIGHT;
-          "S", "s":
-            next = DOWN;
-          "W", "w", " ":
-            next = DROP;
-          "C", "c":
-            next = HOLD;
-          "X", "x":
-            next = ROTATE;
-          "Z", "z":
-            next = ROTATE_REV;
-          "B", "b":
-            next = BAR;
-          default:
-            next = NONE;
-        endcase
-      else if (debounced_btn[0])
-        next = RIGHT;
-      else if (debounced_btn[1])
-        next = DOWN;
-      else if (debounced_btn[2])
-        next = ROTATE;
-      else if (debounced_btn[3])
-        next = LEFT;
-      else if (press_sw[0])
-        next = DROP;
-      else if (press_sw[1])
-        next = HOLD;
-      else if (press_sw[2])
-        next = ROTATE_REV;
-      else if (press_sw[3])
-        next = BAR;
-      else if (down_cnt >= DOWN_TICK)
-        next = DOWN;
-      else if (bar_cnt >= BAR_TICK)
-        next = BAR;
-      else
-        next = NONE;
+  always_comb begin
+    next = NONE;
+    if (reset_n) begin
+      if (~during) begin
+        if (received || |debounced_btn || |press_sw)
+          next = INIT;
+      end else begin
+        if (down_cnt >= DOWN_TICK)
+          next = DOWN;
+        if (bar_cnt >= BAR_TICK)
+          next = BAR;
+        if (debounced_btn[0])
+          next = RIGHT;
+        if (debounced_btn[1])
+          next = DOWN;
+        if (debounced_btn[2])
+          next = ROTATE;
+        if (debounced_btn[3])
+          next = LEFT;
+        if (press_sw[0])
+          next = DROP;
+        if (press_sw[1])
+          next = HOLD;
+        if (press_sw[2])
+          next = ROTATE_REV;
+        if (press_sw[3])
+          next = BAR;
+        if (received)
+          case (rx_byte)
+            "A", "a":
+              next = LEFT;
+            "D", "d":
+              next = RIGHT;
+            "S", "s":
+              next = DOWN;
+            "W", "w", " ":
+              next = DROP;
+            "C", "c":
+              next = HOLD;
+            "X", "x":
+              next = ROTATE;
+            "Z", "z":
+              next = ROTATE_REV;
+            "B", "b":
+              next = BAR;
+          endcase
+      end
     end
+  end
 
   reg [$clog2(QSIZE):0] cnt = 0, i;
   state_type queue [0:QSIZE];
