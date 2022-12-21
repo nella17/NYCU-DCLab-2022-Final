@@ -121,6 +121,12 @@ module control import enum_type::*;
     else
       bar_cnt <= bar_cnt + rng[20+:3];
 
+  reg [7:0] p_rx_byte, pp_rx_byte;
+  always_ff @(posedge clk)
+    p_rx_byte  <= ~reset_n ? 0 : received ? rx_byte   : p_rx_byte;
+  always_ff @(posedge clk)
+    pp_rx_byte <= ~reset_n ? 0 : received ? p_rx_byte : pp_rx_byte;
+
   always_comb begin
     next = NONE;
     if (reset_n) begin
@@ -167,6 +173,17 @@ module control import enum_type::*;
             "B", "b":
               next = BAR;
           endcase
+          if (pp_rx_byte == 8'h1B && p_rx_byte == 8'h5B)
+            case (rx_byte)
+              8'h41:
+                next = HOLD;
+              8'h42:
+                next = DOWN;
+              8'h43:
+                next = RIGHT;
+              8'h44:
+                next = LEFT;
+            endcase
       end
     end
   end
