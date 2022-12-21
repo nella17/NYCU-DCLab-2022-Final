@@ -22,6 +22,7 @@ module control import enum_type::*;
   localparam COUNT_SEC = 60;
   localparam DOWN_TICK = SEC_TICK;
   localparam BAR_TICK  = SEC_TICK * 5 * 4;
+  localparam OVER_TICK = SEC_TICK * 1;
 
   // uart
 
@@ -75,6 +76,7 @@ module control import enum_type::*;
   reg [$clog2(COUNT_SEC)+2:0] count_down = COUNT_SEC;
   reg [$clog2(DOWN_TICK)+2:0] down_cnt = 0;
   reg [$clog2(BAR_TICK)+2:0] bar_cnt = 0;
+  reg [$clog2(OVER_TICK)+2:0] over_cnt = 0;
   state_type next = NONE;
 
   always_ff @(posedge clk)
@@ -121,6 +123,12 @@ module control import enum_type::*;
     else
       bar_cnt <= bar_cnt + rng[20+:3];
 
+  always_ff @(posedge clk)
+    if (~reset_n || ~over)
+      over_cnt <= 0;
+    else
+      over_cnt <= over_cnt + (over_cnt != OVER_TICK);
+
   reg [7:0] p_rx_byte, pp_rx_byte;
   always_ff @(posedge clk)
     p_rx_byte  <= ~reset_n ? 0 : received ? rx_byte   : p_rx_byte;
@@ -133,6 +141,8 @@ module control import enum_type::*;
       if (~during) begin
         if (received || |debounced_btn || |press_sw)
           next = INIT;
+        if (over && over_cnt < OVER_TICK)
+          next = NONE;
       end else begin
         if (down_cnt >= DOWN_TICK)
           next = DOWN;
