@@ -164,7 +164,7 @@ module control import enum_type::*;
           next = ROTATE_REV;
         if (press_sw[3])
           next = BAR;
-        if (received)
+        if (received) begin
           case (rx_byte)
             "A", "a":
               next = LEFT;
@@ -194,6 +194,7 @@ module control import enum_type::*;
               8'h44:
                 next = LEFT;
             endcase
+        end
       end
     end
   end
