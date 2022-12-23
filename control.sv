@@ -84,7 +84,7 @@ module control import enum_type::*;
       start <= 0;
     else if (next == INIT)
       start <= ~over;
-  assign over = start && (count_down == 0 && state == END);
+  assign over = start && (count_down == 0 || state == END);
   logic during = start && ~over;
 
   always_ff @(posedge clk)
