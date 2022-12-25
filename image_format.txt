@@ -1,0 +1,28 @@
+240 * 440
+240/12 = 20
+440/22 = 20
+一格 20 * 20
+y從40到439 -> 20 ~ 219
+x從220到419 -> 110 ~ 210
+
+7顏色格子 20*20 -> 10*10
+數字 x : 64-69,71-76,78-83,85-90
+y : 225 - 234
+一格障礙方塊 before all num
+start介面 after number 100*66
+end介面 100*60
+
+預覽 x:430 - 470
+y:60-80,100-120,140-160,180-200 
+鎖定 x:168 - 208
+y:70-90
+右下座標 x:425-477
+y:311-434
+左下座標 x:189-215
+y:117-439
+轉換:
+BG:
+ppm2mem bg.ppm 
+
+Other data:
+ppm2mem block_lightBlue.ppm block_darkBlue.ppm block_orange.ppm block_yellow.ppm block_red.ppm block_purple.ppm block_green.ppm blocking.ppm view.ppm 0.ppm 1.ppm 2.ppm 3.ppm 4.ppm 5.ppm 6.ppm 7.ppm 8.ppm 9.ppm start.ppm end.ppm 

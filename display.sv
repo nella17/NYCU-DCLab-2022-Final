@@ -29,6 +29,12 @@ module display(
   wire [8:0] pixel_x, pixel_y; // [0,320), [0,240)
 
   reg [4:0] block_x, block_y;
+  reg [3:0] block_next_x, block_next_y;
+  reg [3:0] block_hold_x, block_hold_y;
+  reg [1:0] mask_next_x;
+  reg [1:0] mask_hold_x;
+  reg mask_next_y;
+  reg mask_hold_y;
 
   //NEW ADD VARIABLEs
   // declare SRAM control signals
@@ -42,8 +48,14 @@ module display(
   assign sram_we = 0;         // MAY HAVE TROUBLE !!!!!!!
   assign sram_en = 1;          // Here, we always enable the SRAM block.
 
+  wire  [11:0] boarder;
   wire inside_scoreboard[0:3];
   wire  [3:0] score_dec [0:3];
+  wire inside_hold;
+  wire inside_next[0:3];
+
+  wire start_region;  //for start region
+  wire end_region;
 
   reg  [11:0] rgb_reg;  // RGB value for the current pixel
   reg  [11:0] rgb_next; // RGB value for the next pixel
@@ -61,32 +73,46 @@ module display(
   // Set parameters for the block
   localparam BLOCK_W = 10; // Width of the block.
   localparam BLOCK_H = 10; // Height of the block.
-  reg [17:0]  block_addr[0:7];   // Address array for up to 7 block images. 
+  reg [17:0] block_addr[0:9];   // Address array for up to 7 block images. 
   localparam NUM_W = 5;
   localparam NUM_H = 9;
-  reg [17:0]  num_addr[0:9];  // Address array for up to 10 number images. 0 ~ 9
+  reg [17:0] num_addr[0:9];  // Address array for up to 10 number images. 0 ~ 9
+  
+  localparam INTERFACE_W = 100;
+  localparam INTERFACE_START_H = 66;
+  localparam INTERFACE_END_H = 60;
+  reg [17:0] interface_addr[0:1];
   localparam GREEN = 1;
+  
+  localparam [7:0]blockmask[0:7] = '{{8'b00000000}, {8'b11110000}, {8'b10001110}, {8'b00101110},
+                                    {8'b01100110}, {8'b01101100}, {8'b01001110}, {8'b11000110}};
+
 
   initial begin
-    block_addr[0] = 18'd0;         /* Addr for block image #1 */
-    block_addr[1] = BLOCK_W*BLOCK_H * 1;
-    block_addr[2] = BLOCK_W*BLOCK_H * 2;
-    block_addr[3] = BLOCK_W*BLOCK_H * 3;
-    block_addr[4] = BLOCK_W*BLOCK_H * 4;
-    block_addr[5] = BLOCK_W*BLOCK_H * 5;
-    block_addr[6] = BLOCK_W*BLOCK_H * 6;
-    block_addr[7] = BLOCK_W*BLOCK_H * 7 + NUM_W*NUM_H*10;
+    block_addr[0] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*10 + INTERFACE_W*INTERFACE_START_H + INTERFACE_W*INTERFACE_END_H;
+    block_addr[1] = 18'd0;         /* Addr for block image #1 */
+    block_addr[2] = BLOCK_W*BLOCK_H * 1;
+    block_addr[3] = BLOCK_W*BLOCK_H * 2;
+    block_addr[4] = BLOCK_W*BLOCK_H * 3;
+    block_addr[5] = BLOCK_W*BLOCK_H * 4;
+    block_addr[6] = BLOCK_W*BLOCK_H * 5;
+    block_addr[7] = BLOCK_W*BLOCK_H * 6;
+    block_addr[8] = BLOCK_W*BLOCK_H * 7;
+    block_addr[9] = BLOCK_W*BLOCK_H * 8;
     
-    num_addr[0] = BLOCK_W*BLOCK_H * 7 + 18'd0;         /* Addr for num image #1 */
-    num_addr[1] = BLOCK_W*BLOCK_H * 7 + NUM_W*NUM_H*1;
-    num_addr[2] = BLOCK_W*BLOCK_H * 7 + NUM_W*NUM_H*2;
-    num_addr[3] = BLOCK_W*BLOCK_H * 7 + NUM_W*NUM_H*3;
-    num_addr[4] = BLOCK_W*BLOCK_H * 7 + NUM_W*NUM_H*4;
-    num_addr[5] = BLOCK_W*BLOCK_H * 7 + NUM_W*NUM_H*5;
-    num_addr[6] = BLOCK_W*BLOCK_H * 7 + NUM_W*NUM_H*6;
-    num_addr[7] = BLOCK_W*BLOCK_H * 7 + NUM_W*NUM_H*7;
-    num_addr[8] = BLOCK_W*BLOCK_H * 7 + NUM_W*NUM_H*8;
-    num_addr[9] = BLOCK_W*BLOCK_H * 7 + NUM_W*NUM_H*9;
+    num_addr[0] = BLOCK_W*BLOCK_H * 9 + 18'd0;         /* Addr for num image #1 */
+    num_addr[1] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*1;
+    num_addr[2] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*2;
+    num_addr[3] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*3;
+    num_addr[4] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*4;
+    num_addr[5] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*5;
+    num_addr[6] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*6;
+    num_addr[7] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*7;
+    num_addr[8] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*8;
+    num_addr[9] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*9;
+
+    interface_addr[0] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*10;
+    interface_addr[1] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*10 + INTERFACE_W*INTERFACE_START_H;
   end
 
   vga_sync_reg vs0(
@@ -100,23 +126,37 @@ module display(
   sram #(.DATA_WIDTH(12), .ADDR_WIDTH(17), .RAM_SIZE(BG_W*BG_H), .FILE("images.mem"))
     ram0 (.clk(clk), .we(sram_we), .en(sram_en),
             .addr(bg_addr), .data_i(data_in), .data_o(bg_out));
-  sram #(.DATA_WIDTH(12), .ADDR_WIDTH(17), .RAM_SIZE(BLOCK_W*BLOCK_H * 7 + NUM_W*NUM_H*10 + GREEN), .FILE("block_num.mem"))
+  sram #(.DATA_WIDTH(12), .ADDR_WIDTH(17), .RAM_SIZE(BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*10 + INTERFACE_W*(INTERFACE_START_H + INTERFACE_END_H) + GREEN), .FILE("block_num.mem"))
     ram1 (.clk(clk), .we(sram_we), .en(sram_en),
             .addr(sram_addr), .data_i(data_in), .data_o(data_out));
 
   assign {VGA_RED, VGA_GREEN, VGA_BLUE} = rgb_reg;
 
   always @(posedge clk) begin
+    /*if (start && start_region)begin
+      pixel_addr <= interface_addr[0] + (pixel_x2 - 220)>>1 + ((pixel_y2 -  207)>>1) * 100;
+    end
+    else if(over && end_region)begin
+      pixel_addr <= interface_addr[1] + (pixel_x2 - 220) + (pixel_y2 -  210) * 100;
+    end
+    else */
     if (inside_tetris) begin
       case (kind)
-        3'b000: pixel_addr <= block_addr[7];
-        3'b001: pixel_addr <= block_addr[0] + (block_y >> 1)*BLOCK_W + (block_x >> 1);
-        3'b010: pixel_addr <= block_addr[1] + (block_y >> 1)*BLOCK_W + (block_x >> 1);
-        3'b011: pixel_addr <= block_addr[2] + (block_y >> 1)*BLOCK_W + (block_x >> 1);
-        3'b100: pixel_addr <= block_addr[3] + (block_y >> 1)*BLOCK_W + (block_x >> 1);
-        3'b101: pixel_addr <= block_addr[4] + (block_y >> 1)*BLOCK_W + (block_x >> 1);
-        3'b110: pixel_addr <= block_addr[5] + (block_y >> 1)*BLOCK_W + (block_x >> 1);
-        3'b111: pixel_addr <= block_addr[6] + (block_y >> 1)*BLOCK_W + (block_x >> 1);
+        4'b0000: begin
+          if (block_y == 0 || block_x == 0)
+            pixel_addr <= 899;
+          else
+            pixel_addr <= block_addr[0];
+        end
+        4'b0001: pixel_addr <= block_addr[1] + (block_y >> 1)*BLOCK_W + (block_x >> 1);
+        4'b0010: pixel_addr <= block_addr[2] + (block_y >> 1)*BLOCK_W + (block_x >> 1);
+        4'b0011: pixel_addr <= block_addr[3] + (block_y >> 1)*BLOCK_W + (block_x >> 1);
+        4'b0100: pixel_addr <= block_addr[4] + (block_y >> 1)*BLOCK_W + (block_x >> 1);
+        4'b0101: pixel_addr <= block_addr[5] + (block_y >> 1)*BLOCK_W + (block_x >> 1);
+        4'b0110: pixel_addr <= block_addr[6] + (block_y >> 1)*BLOCK_W + (block_x >> 1);
+        4'b0111: pixel_addr <= block_addr[7] + (block_y >> 1)*BLOCK_W + (block_x >> 1);
+        4'b1000: pixel_addr <= block_addr[8] + (block_y >> 1)*BLOCK_W + (block_x >> 1);
+        4'b1001: pixel_addr <= block_addr[9] + (block_y >> 1)*BLOCK_W + (block_x >> 1);
       endcase
     end
     else if (inside_scoreboard[0]) begin
@@ -131,7 +171,32 @@ module display(
     else if (inside_scoreboard[3]) begin
       pixel_addr <= num_addr[score_dec[3]] + (pixel_x - 85) + (pixel_y - 225) * NUM_W;
     end
-    else pixel_addr <= block_addr[7];
+    else if (inside_next[0]) begin
+      if (blockmask[next[0]][mask_next_y*4 + mask_next_x] == 1)
+        pixel_addr <= block_addr[next[0]] + (block_next_y)*BLOCK_W + block_next_x;
+      else pixel_addr <= block_addr[0];
+    end
+    else if (inside_next[1]) begin
+      if (blockmask[next[1]][mask_next_y*4 + mask_next_x] == 1)
+        pixel_addr <= block_addr[next[1]] + (block_next_y)*BLOCK_W + block_next_x;
+      else pixel_addr <= block_addr[0];
+    end
+    else if (inside_next[2]) begin
+      if (blockmask[next[2]][mask_next_y*4 + mask_next_x] == 1)
+        pixel_addr <= block_addr[next[2]] + (block_next_y)*BLOCK_W + block_next_x;
+      else pixel_addr <= block_addr[0];
+    end
+    else if (inside_next[3]) begin
+      if (blockmask[next[3]][mask_next_y*4 + mask_next_x] == 1)
+        pixel_addr <= block_addr[next[3]] + (block_next_y)*BLOCK_W + block_next_x;
+      else pixel_addr <= block_addr[0];
+    end
+    else if (inside_hold) begin
+      if (blockmask[hold][mask_hold_y * 4 + mask_hold_x] == 1)
+        pixel_addr <= block_addr[hold] + (block_hold_y)*BLOCK_W + block_hold_x;
+      else pixel_addr <= block_addr[0];
+    end
+    else pixel_addr <= block_addr[0];
   end
 
   always @(posedge clk) begin
@@ -139,13 +204,34 @@ module display(
     tetris_y <= ~inside_tetris ? 0 : (pixel_y2 -  40) / 20;
     block_x  <= ~inside_tetris ? 0 : (pixel_x2 - 220) % 20;
     block_y  <= ~inside_tetris ? 0 : (pixel_y2 -  40) % 20;
+    block_next_x <= (pixel_x2) % 10;
+    block_next_y <= (pixel_y2) % 10;
+    mask_next_x <= 3 - (pixel_x2 - 430) / 10;
+    mask_next_y <= ((pixel_y2) / 10 + 1) % 2;
+    block_hold_x <= (pixel_x2 - 168) % 10;
+    block_hold_y <= (pixel_y2) %10;
+    mask_hold_x <= 3 - (pixel_x2 - 168) / 10;
+    mask_hold_y <= ((pixel_y2) / 10) % 2;
   end
 
+  //area for tetris board
   assign inside_tetris = (220 <= pixel_x2) & (pixel_x2 < 420) & (40 <= pixel_y2) & (pixel_y2 < 440);
+  //area for start/end
+  assign start_region = (220 <= pixel_x2) & (pixel_x2 < 420) & (207 <= pixel_y2) & (pixel_y2 < 273);
+  assign end_region = (220 <= pixel_x2) & (pixel_x2 < 420) & (210 <= pixel_y2) & (pixel_y2 < 270);
+  //area for scoreboard
   assign inside_scoreboard[0] = (64 <= pixel_x) & (pixel_x < 69) & (225 <= pixel_y) & (pixel_y < 234);
   assign inside_scoreboard[1] = (71 <= pixel_x) & (pixel_x < 76) & (225 <= pixel_y) & (pixel_y < 234);
   assign inside_scoreboard[2] = (78 <= pixel_x) & (pixel_x < 83) & (225 <= pixel_y) & (pixel_y < 234);
   assign inside_scoreboard[3] = (85 <= pixel_x) & (pixel_x < 90) & (225 <= pixel_y) & (pixel_y < 234);
+  //area for next block
+  assign inside_next[3] = (430 < pixel_x2) & (470 > pixel_x2) & (180 <= pixel_y2) & (200 > pixel_y2 );
+  assign inside_next[2] = (430 < pixel_x2) & (470 > pixel_x2) & (140 <= pixel_y2) & (160 > pixel_y2 );
+  assign inside_next[1] = (430 < pixel_x2) & (470 > pixel_x2) & (100 <= pixel_y2) & (120 > pixel_y2 );
+  assign inside_next[0] = (430 < pixel_x2) & (470 > pixel_x2) & (60 <= pixel_y2) & (80 > pixel_y2 );
+  //area for hold
+  assign inside_hold = (168 < pixel_x2) & (208 > pixel_x2) & (70 <= pixel_y2) & (90 > pixel_y2 );
+
   assign score_dec[3] = tetris_score[ 0+:4];
   assign score_dec[2] = tetris_score[ 4+:4];
   assign score_dec[1] = tetris_score[ 8+:4];
