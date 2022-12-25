@@ -171,30 +171,20 @@ module display(
     else if (inside_scoreboard[3]) begin
       pixel_addr <= num_addr[score_dec[3]] + (pixel_x - 85) + (pixel_y - 225) * NUM_W;
     end
-    else if (inside_next[0]) begin
-      if (blockmask[next[0]][mask_next_y*4 + mask_next_x] == 1)
+    else if (inside_next[0] && blockmask[next[0]][mask_next_y*4 + mask_next_x]) begin
         pixel_addr <= block_addr[next[0]] + (block_next_y)*BLOCK_W + block_next_x;
-      else pixel_addr <= block_addr[0];
     end
-    else if (inside_next[1]) begin
-      if (blockmask[next[1]][mask_next_y*4 + mask_next_x] == 1)
+    else if (inside_next[1] && blockmask[next[1]][mask_next_y*4 + mask_next_x]) begin
         pixel_addr <= block_addr[next[1]] + (block_next_y)*BLOCK_W + block_next_x;
-      else pixel_addr <= block_addr[0];
     end
-    else if (inside_next[2]) begin
-      if (blockmask[next[2]][mask_next_y*4 + mask_next_x] == 1)
+    else if (inside_next[2] && blockmask[next[2]][mask_next_y*4 + mask_next_x]) begin
         pixel_addr <= block_addr[next[2]] + (block_next_y)*BLOCK_W + block_next_x;
-      else pixel_addr <= block_addr[0];
     end
-    else if (inside_next[3]) begin
-      if (blockmask[next[3]][mask_next_y*4 + mask_next_x] == 1)
+    else if (inside_next[3] && blockmask[next[3]][mask_next_y*4 + mask_next_x]) begin
         pixel_addr <= block_addr[next[3]] + (block_next_y)*BLOCK_W + block_next_x;
-      else pixel_addr <= block_addr[0];
     end
-    else if (inside_hold) begin
-      if (blockmask[hold][mask_hold_y * 4 + mask_hold_x] == 1)
+    else if (inside_hold && blockmask[hold][mask_hold_y * 4 + mask_hold_x]) begin
         pixel_addr <= block_addr[hold] + (block_hold_y)*BLOCK_W + block_hold_x;
-      else pixel_addr <= block_addr[0];
     end
     else pixel_addr <= block_addr[0];
   end
