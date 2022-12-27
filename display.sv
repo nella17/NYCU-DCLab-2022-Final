@@ -6,6 +6,7 @@ module display(
 
   input  start,
   input  over,
+  input  [$clog2(COUNT_SEC)+2:0] count_down,
   input  [3:0] kind,
   input  [3:0] hold,
   input  [3:0] next [0:3],

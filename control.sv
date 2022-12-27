@@ -14,16 +14,10 @@ module control import enum_type::*;
   output state_type control,
   output logic [9:0] bar_mask,
   output logic start,
-  output logic over
+  output logic over,
+  output logic [$clog2(COUNT_SEC)+2:0] count_down
 );
   genvar gi;
-
-  localparam QSIZE = 16;
-  localparam SEC_TICK  = 50_000_000;
-  localparam COUNT_SEC = 60;
-  localparam DOWN_TICK = SEC_TICK;
-  localparam BAR_TICK  = SEC_TICK * 5 * 4;
-  localparam OVER_TICK = SEC_TICK * 1;
 
   // uart
 
@@ -74,7 +68,6 @@ module control import enum_type::*;
   // control
 
   logic [$clog2(SEC_TICK)+2:0] sec_cnt;
-  logic [$clog2(COUNT_SEC)+2:0] count_down;
   logic [$clog2(DOWN_TICK)+2:0] down_cnt, down_tick;
   logic [$clog2(BAR_TICK)+2:0] bar_cnt;
   logic [$clog2(OVER_TICK)+2:0] over_cnt;
