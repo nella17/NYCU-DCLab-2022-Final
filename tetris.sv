@@ -417,24 +417,33 @@ module tetris import enum_type::*;
       preview_mask <= preview_down_mask;
   end
 
-  reg [4:0] score_pending = 0;
+  reg [2:0] lines_cleared = 0;
+  reg [7:0] score_pending = 0;
   reg [4:0] score_carry = 0;
   always_ff @(posedge clk) begin
+    score_carry[0] <= 0;
     if (~reset_n || state == INIT) begin
+      lines_cleared <= 0;
       score_pending <= 0;
-      score_carry <= 0;
     end 
     else if (state == CLEAR && do_clear) begin
-      score_pending = score_pending + 1;
+      lines_cleared <= lines_cleared + 1;
     end
-    if (score_pending != 0) begin
+    else if (state != CLEAR && state != CPREP && lines_cleared != 0) begin
+      lines_cleared <= 0;
+      case (lines_cleared)
+        1: score_pending <= score_pending + 1;
+        2: score_pending <= score_pending + 3;
+        3: score_pending <= score_pending + 5;
+        4: score_pending <= score_pending + 8;
+      endcase
+    end
+    else if (score_pending != 0) begin
       score_pending <= score_pending - 1;
       score_carry[0] <= 1;
     end
-    else begin
-      score_carry[0] <= 0;
-    end
   end
+
   generate for(gi = 0; gi < 4; gi = gi+1)
     always_ff @(posedge clk)
       if (~reset_n || state == INIT)
