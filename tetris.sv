@@ -18,7 +18,9 @@ module tetris import enum_type::*;
   output reg [3:0] hold,
   output reg [3:0] next [0:3],
   output reg hold_locked,
-  output reg [4:0] pending_counter
+  output reg [4:0] pending_counter,
+  output reg [2*4-1:0] combo,
+  output reg t_spin
 );
   genvar gi;
 
@@ -445,17 +447,17 @@ module tetris import enum_type::*;
   end
 
   reg [2:0] lines_cleared = 0;
-  reg [7:0] combo = 0;
+  reg [7:0] combo_score = 0;
   reg [7:0] score_pending = 0;
   reg [4:0] score_carry = 0;
-  wire t_spin = is_rotate[1] && (curr_kind == 6);
-  wire [2:0] t_spin_score = (t_spin ? 4 : 0);
+  wire t_spin_detected = is_rotate[1] && (curr_kind == 6);
   always_ff @(posedge clk) begin
     score_carry[0] <= 0;
     if (~reset_n || state == INIT) begin
       lines_cleared <= 0;
-      combo <= 0;
+      combo_score <= 0;
       score_pending <= 0;
+      t_spin <= 0;
     end 
     else if (state == CLEAR && do_clear) begin
       lines_cleared <= lines_cleared + 1;
@@ -463,21 +465,30 @@ module tetris import enum_type::*;
     else if (state == BPLACE) begin
       lines_cleared <= 0;
       if (lines_cleared == 0)
-        combo <= 0;
+        combo_score <= 0;
       else begin
-        combo <= combo + 1;
+        combo_score <= combo_score + 1;
         case (lines_cleared)
-          1: score_pending <= score_pending + 1 + combo + t_spin_score;
-          2: score_pending <= score_pending + 3 + combo + t_spin_score;
-          3: score_pending <= score_pending + 5 + combo + t_spin_score;
-          4: score_pending <= score_pending + 8 + combo + t_spin_score;
+          1: score_pending <= score_pending + 1 + combo_score + (t_spin_detected ? 4 : 0);
+          2: score_pending <= score_pending + 3 + combo_score + (t_spin_detected ? 4 : 0);
+          3: score_pending <= score_pending + 5 + combo_score + (t_spin_detected ? 4 : 0);
+          4: score_pending <= score_pending + 8 + combo_score + (t_spin_detected ? 4 : 0);
         endcase
+        t_spin <= t_spin_detected;
       end
     end
     else if (score_pending != 0) begin
       score_pending <= score_pending - 1;
       score_carry[0] <= 1;
     end
+  end
+
+  always @(posedge clk) begin
+    if (combo_score == 0)
+      combo <= 0;
+    else
+      combo[7:4] <= (combo_score - 1) / 10;
+      combo[3:0] <= (combo_score - 1) % 10;
   end
 
   generate for(gi = 0; gi < 4; gi = gi+1)

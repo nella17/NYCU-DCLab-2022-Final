@@ -38,6 +38,8 @@ module final_project import enum_type::*;
   wire hold_locked, start, over;
   logic [$clog2(COUNT_SEC)+2:0] count_down;
   logic [4:0] pending_counter;
+  wire [2*4-1:0] combo;
+  wire t_spin;
 
   wire [31:0] rng;
 
@@ -83,7 +85,9 @@ module final_project import enum_type::*;
     .hold(tetris_hold),
     .next(tetris_next),
     .hold_locked(hold_locked),
-    .pending_counter(pending_counter)
+    .pending_counter(pending_counter),
+    .combo(combo),
+    .t_spin(t_spin)
   );
 
   display display0(
@@ -142,6 +146,8 @@ module final_project import enum_type::*;
       row_A[37:30] <= ns + 8'h22;
       row_B[37:30] <= nc + 8'h22;
       `N2T(i, 4, tetris_score, 0, row_B, 8)
+      `N2T(i, 2, combo, 0, row_B, 12)
+      `N2T(i, 1, {3'b000, t_spin}, 0, row_A, 12)
     end
   end
 
