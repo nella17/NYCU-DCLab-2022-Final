@@ -427,10 +427,29 @@ module tetris import enum_type::*;
       preview_mask <= preview_down_mask;
   end
 
+  reg is_rotate [1:0] = { 0, 0 };
+  always @(posedge clk) begin
+    if (state == GEN) begin
+      is_rotate[1] <= 0;
+      is_rotate[0] <= 0;
+    end
+    else if (state == WAIT && next_state != WAIT) begin
+      if (next_state != BAR) begin
+        is_rotate[1] <= is_rotate[0];
+        if (next_state == ROTATE || next_state == ROTATE_REV)
+          is_rotate[0] <= 1;
+        else
+          is_rotate[0] <= 0;
+      end
+    end
+  end
+
   reg [2:0] lines_cleared = 0;
   reg [7:0] combo = 0;
   reg [7:0] score_pending = 0;
   reg [4:0] score_carry = 0;
+  wire t_spin = is_rotate[1] && (curr_kind == 6);
+  wire [2:0] t_spin_score = (t_spin ? 4 : 0);
   always_ff @(posedge clk) begin
     score_carry[0] <= 0;
     if (~reset_n || state == INIT) begin
@@ -448,10 +467,10 @@ module tetris import enum_type::*;
       else begin
         combo <= combo + 1;
         case (lines_cleared)
-          1: score_pending <= score_pending + 1 + combo;
-          2: score_pending <= score_pending + 3 + combo;
-          3: score_pending <= score_pending + 5 + combo;
-          4: score_pending <= score_pending + 8 + combo;
+          1: score_pending <= score_pending + 1 + combo + t_spin_score;
+          2: score_pending <= score_pending + 3 + combo + t_spin_score;
+          3: score_pending <= score_pending + 5 + combo + t_spin_score;
+          4: score_pending <= score_pending + 8 + combo + t_spin_score;
         endcase
       end
     end
