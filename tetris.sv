@@ -429,28 +429,19 @@ module tetris import enum_type::*;
       preview_mask <= preview_down_mask;
   end
 
-  reg is_rotate [1:0] = { 0, 0 };
+  reg is_rotate = 0;
   always @(posedge clk) begin
-    if (state == GEN) begin
-      is_rotate[1] <= 0;
-      is_rotate[0] <= 0;
-    end
-    else if (state == WAIT && next_state != WAIT) begin
-      if (next_state != BAR) begin
-        is_rotate[1] <= is_rotate[0];
-        if (next_state == ROTATE || next_state == ROTATE_REV)
-          is_rotate[0] <= 1;
-        else
-          is_rotate[0] <= 0;
-      end
-    end
+    if (state == GEN)
+      is_rotate <= 0;
+    else if (state == WAIT && next_state != WAIT && next_state != BAR && next_state != DOWN)
+      is_rotate <= (next_state == ROTATE || next_state == ROTATE_REV);
   end
 
   reg [2:0] lines_cleared = 0;
   reg [7:0] combo_score = 0;
   reg [7:0] score_pending = 0;
   reg [4:0] score_carry = 0;
-  wire t_spin_detected = is_rotate[1] && (curr_kind == 6);
+  wire t_spin_detected = is_rotate && (curr_kind == 6);
   always_ff @(posedge clk) begin
     score_carry[0] <= 0;
     if (~reset_n || state == INIT) begin

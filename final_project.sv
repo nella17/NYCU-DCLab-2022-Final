@@ -143,11 +143,9 @@ module final_project import enum_type::*;
     else begin
       `N2T(i, 2, ns, 0, row_A, 0)
       `N2T(i, 2, nc, 0, row_B, 0)
-      row_A[37:30] <= ns + 8'h22;
-      row_B[37:30] <= nc + 8'h22;
       `N2T(i, 4, tetris_score, 0, row_B, 8)
-      `N2T(i, 2, combo, 0, row_B, 12)
-      `N2T(i, 1, {3'b000, t_spin}, 0, row_A, 12)
+      `N2T(i, 2, combo, 0, row_B, 14)
+      `N2T(i, 1, {3'b000, t_spin}, 0, row_A, 14)
     end
   end
 
