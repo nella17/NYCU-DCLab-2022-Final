@@ -59,6 +59,7 @@ module final_project import enum_type::*;
     .uart_rx(uart_rx),
     .uart_tx(uart_tx),
     .state(tetris_state),
+    .score(tetris_score),
     .control(tetris_ctrl),
     .bar_mask(tetris_bar_mask),
     .start(start),

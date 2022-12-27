@@ -10,6 +10,7 @@ module control import enum_type::*;
   input  uart_rx,
   output uart_tx,
   input  state_type state,
+  input  [4*4-1:0] score,
   output state_type control,
   output logic [9:0] bar_mask,
   output logic start,
@@ -72,11 +73,11 @@ module control import enum_type::*;
 
   // control
 
-  reg [$clog2(SEC_TICK)+2:0] sec_cnt = 0;
-  reg [$clog2(COUNT_SEC)+2:0] count_down = COUNT_SEC;
-  reg [$clog2(DOWN_TICK)+2:0] down_cnt = 0;
-  reg [$clog2(BAR_TICK)+2:0] bar_cnt = 0;
-  reg [$clog2(OVER_TICK)+2:0] over_cnt = 0;
+  logic [$clog2(SEC_TICK)+2:0] sec_cnt;
+  logic [$clog2(COUNT_SEC)+2:0] count_down;
+  logic [$clog2(DOWN_TICK)+2:0] down_cnt, down_tick;
+  logic [$clog2(BAR_TICK)+2:0] bar_cnt;
+  logic [$clog2(OVER_TICK)+2:0] over_cnt;
   state_type next = NONE;
 
   always_ff @(posedge clk)
@@ -102,13 +103,19 @@ module control import enum_type::*;
       count_down <= count_down - 1;
 
   always_ff @(posedge clk)
+    if (~reset_n)
+      down_tick <= DOWN_TICK;
+    else
+      down_tick <= DOWN_TICK - (score << 10);
+
+  always_ff @(posedge clk)
     if (~reset_n || ~during)
       down_cnt <= 0;
     else if (next == DOWN)
-      if (down_cnt < DOWN_TICK)
+      if (down_cnt < down_tick)
         down_cnt <= 0;
       else
-        down_cnt <= down_cnt - DOWN_TICK;
+        down_cnt <= down_cnt - down_tick;
     else
       down_cnt <= down_cnt + 1;
 
