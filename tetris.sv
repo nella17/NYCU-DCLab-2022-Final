@@ -477,9 +477,10 @@ module tetris import enum_type::*;
   always @(posedge clk) begin
     if (combo_score == 0)
       combo <= 0;
-    else
+    else begin
       combo[7:4] <= (combo_score - 1) / 10;
       combo[3:0] <= (combo_score - 1) % 10;
+    end
   end
 
   generate for(gi = 0; gi < 4; gi = gi+1)
