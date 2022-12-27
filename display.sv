@@ -1,6 +1,7 @@
 `timescale 1ns / 1ps
 
-module display(
+module display import enum_type::*;
+(
   input  clk,
   input  reset_n,
 
