@@ -298,12 +298,13 @@ module tetris import enum_type::*;
     else
       for(i = 0; i < 4; i++)
         if (next[i] == 0)
-          next[i] <= rng[i*3+:3];
+          next[i] <= rng[4+i*3+:3];
 
   always_ff @(posedge clk) begin
     if (~reset_n || state == INIT) begin
       hold <= 0;
       curr_kind <= 0;
+      curr_mask <= 0;
       placed_kind <= { 0, 0, 0, 0 };
       pending_mask <= 0;
       pending_counter <= 0;
