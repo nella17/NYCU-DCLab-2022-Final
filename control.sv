@@ -193,7 +193,7 @@ module control import enum_type::*;
           if (pp_rx_byte == 8'h1B && p_rx_byte == 8'h5B)
             case (rx_byte)
               8'h41:
-                next = HOLD;
+                next = ROTATE;
               8'h42:
                 next = DOWN;
               8'h43:

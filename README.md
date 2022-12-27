@@ -64,12 +64,15 @@ wire [3:0] kind, hold, next [0:3];
 - LEFT
   - A
   - btn3
+  - arrow key left
 - RIGHT
   - D
   - btn0
+  - arrow key right
 - DOWN
   - S
   - btn1
+  - arrow key down
 - DROP
   - W
   - space
@@ -80,6 +83,7 @@ wire [3:0] kind, hold, next [0:3];
 - ROTATE
   - X
   - btn3
+  - arrow key up
 - ROTATE_REV
   - Z
   - sw2
