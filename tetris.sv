@@ -166,18 +166,16 @@ module tetris import enum_type::*;
   assign right_x_offset = curr_x_offset + 1;
   assign down_y_offset = curr_y_offset + 1;
   assign hold_kind = (hold == 0) ? next[0] : hold;
-  assign gen_mask = {3'b000,             4'b0000, 3'b000,
-                     3'b000, mask[next[0]][0][0], 3'b000,
+  assign gen_mask = {3'b000, mask[next[0]][0][0], 3'b000,
                      3'b000, mask[next[0]][1][0], 3'b000,
                      3'b000, mask[next[0]][2][0], 3'b000,
                      3'b000, mask[next[0]][3][0], 3'b000,
-                     170'b0};
-  assign hold_mask = {3'b000,               4'b0000, 3'b000,
-                      3'b000, mask[hold_kind][0][0], 3'b000,
+                     180'b0};
+  assign hold_mask = {3'b000, mask[hold_kind][0][0], 3'b000,
                       3'b000, mask[hold_kind][1][0], 3'b000,
                       3'b000, mask[hold_kind][2][0], 3'b000,
                       3'b000, mask[hold_kind][3][0], 3'b000,
-                      170'b0};
+                      180'b0};
   assign rotate_mask = {mask[curr_kind][0][next_rotate_idx], 6'b000,
                         mask[curr_kind][1][next_rotate_idx], 6'b000,
                         mask[curr_kind][2][next_rotate_idx], 6'b000,
@@ -307,14 +305,14 @@ module tetris import enum_type::*;
           };
           curr_mask <= gen_mask;
           curr_x_offset <= 5;
-          curr_y_offset <= 1;
+          curr_y_offset <= 0;
           curr_rotate_idx <= 0;
         end
         HOLD: begin
           check_kind <= hold_kind;
           check_mask <= hold_mask;
           check_x_offset <= 5;
-          check_y_offset <= 1;
+          check_y_offset <= 0;
           check_rotate_idx <= 0;
           hold_locked <= 1;
         end
