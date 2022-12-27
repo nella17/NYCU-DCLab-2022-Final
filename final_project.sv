@@ -37,6 +37,7 @@ module final_project import enum_type::*;
   wire [3:0] tetris_kind, tetris_hold, tetris_next[0:3];
   wire hold_locked, start, over;
   logic [$clog2(COUNT_SEC)+2:0] count_down;
+  logic [4:0] pending_counter;
 
   wire [31:0] rng;
 
@@ -81,7 +82,8 @@ module final_project import enum_type::*;
     .kind(tetris_kind),
     .hold(tetris_hold),
     .next(tetris_next),
-    .hold_locked(hold_locked)
+    .hold_locked(hold_locked),
+    .pending_counter(pending_counter)
   );
 
   display display0(
@@ -89,12 +91,12 @@ module final_project import enum_type::*;
     .reset_n(reset_n),
     .start(start),
     .over(over),
-    .count_down(count_down),
+    .tetris_score(tetris_score),
     .kind(tetris_kind),
     .hold(tetris_hold),
     .next(tetris_next),
     .hold_locked(hold_locked),
-    .tetris_score(tetris_score),
+    .count_down(count_down),
     .tetris_x(tetris_x),
     .tetris_y(tetris_y),
     .VGA_HSYNC(VGA_HSYNC),

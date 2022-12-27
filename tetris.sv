@@ -17,7 +17,8 @@ module tetris import enum_type::*;
   output reg [3:0] kind,
   output reg [3:0] hold,
   output reg [3:0] next [0:3],
-  output reg hold_locked
+  output reg hold_locked,
+  output reg [4:0] pending_counter
 );
   genvar gi;
 
@@ -144,8 +145,7 @@ module tetris import enum_type::*;
               test_mask = 0,
               clear_mask = 0,
               pending_mask = 0;
-  reg [4:0] clear_counter   = 0,
-            pending_counter = 0;
+  reg [4:0] clear_counter   = 0;
   reg curr_mask_updated = 0;
 
   // comb logic --------------------------------------------------

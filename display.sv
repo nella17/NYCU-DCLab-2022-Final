@@ -7,11 +7,12 @@ module display(
   input  start,
   input  over,
   input  [$clog2(COUNT_SEC)+2:0] count_down,
+  input  [4*4-1:0] tetris_score,
   input  [3:0] kind,
   input  [3:0] hold,
   input  [3:0] next [0:3],
   input  hold_locked,
-  input  [4*4-1:0] tetris_score,
+  input  [4:0] pending_mask,
   output reg [4:0] tetris_x, tetris_y,
 
   // VGA specific I/O ports
