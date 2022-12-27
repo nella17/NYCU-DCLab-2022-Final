@@ -419,18 +419,30 @@ module tetris import enum_type::*;
       preview_mask <= preview_down_mask;
   end
 
+  reg [4:0] score_pending = 0;
   reg [4:0] score_carry = 0;
-  always_ff @(posedge clk)
-      if (~reset_n || ~do_clear || state != CLEAR)
-          score_carry[0] <= 0;
-      else
-          score_carry[0] <= 1;
+  always_ff @(posedge clk) begin
+    if (~reset_n || state == INIT) begin
+      score_pending <= 0;
+      score_carry <= 0;
+    end 
+    else if (state == CLEAR && do_clear) begin
+      score_pending = score_pending + 1;
+    end
+    if (score_pending != 0) begin
+      score_pending <= score_pending - 1;
+      score_carry[0] <= 1;
+    end
+    else begin
+      score_carry[0] <= 0;
+    end
+  end
   generate for(gi = 0; gi < 4; gi = gi+1)
-      always_ff @(posedge clk)
-          if (~reset_n || state == INIT)
-              score[gi*4+:4] <= 0;
-          else
-              { score_carry[gi+1], score[gi*4+:4] } <= `BCD_ADD(score[gi*4+:4], score_carry[gi]);
+    always_ff @(posedge clk)
+      if (~reset_n || state == INIT)
+        score[gi*4+:4] <= 0;
+      else
+        { score_carry[gi+1], score[gi*4+:4] } <= `BCD_ADD(score[gi*4+:4], score_carry[gi]);
   endgenerate
 
 endmodule
