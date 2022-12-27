@@ -106,7 +106,7 @@ module control import enum_type::*;
     if (~reset_n)
       down_tick <= DOWN_TICK;
     else
-      down_tick <= DOWN_TICK - (score << 10);
+      down_tick <= DOWN_TICK - (score << 15);
 
   always_ff @(posedge clk)
     if (~reset_n || ~during)
