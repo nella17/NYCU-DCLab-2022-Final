@@ -279,16 +279,31 @@ module tetris import enum_type::*;
   always_ff @(posedge clk)
     state <= next_state;
 
-  always_ff @(posedge clk) begin
-    if (~reset_n || state == INIT) begin
-      hold <= 0;
-      curr_kind <= 0;
+  reg [0:2] i;
+  always_ff @(posedge clk)
+    if (~reset_n || state == INIT)
       next <= {
         rng[0+:3],
         rng[3+:3],
         rng[6+:3],
         rng[9+:3]
       };
+    else if (state == GEN)
+      next <= {
+        next[1], 
+        next[2],
+        next[3],
+        rng[0+:3]
+      };
+    else
+      for(i = 0; i < 4; i++)
+        if (next[i] == 0)
+          next[i] <= rng[i*3+:3];
+
+  always_ff @(posedge clk) begin
+    if (~reset_n || state == INIT) begin
+      hold <= 0;
+      curr_kind <= 0;
       placed_kind <= { 0, 0, 0, 0 };
       pending_mask <= 0;
       pending_counter <= 0;
@@ -297,12 +312,6 @@ module tetris import enum_type::*;
       case (state)
         GEN: begin
           curr_kind <= next[0];
-          next <= {
-            next[1], 
-            next[2],
-            next[3],
-            rng[0+:3]
-          };
           curr_mask <= gen_mask;
           curr_x_offset <= 5;
           curr_y_offset <= 0;
