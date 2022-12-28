@@ -29,7 +29,11 @@ module display import enum_type::*;
   wire p_tick;          // when p_tick is 1, we must update the RGB value
                         // based for the new coordinate (pixel_x, pixel_y)
   wire [9:0] pixel_x2, pixel_y2; // [0,640), [0,480)
-  wire [8:0] pixel_x, pixel_y; // [0,320), [0,240)
+  reg  [9:0] pixel_x2_d, pixel_y2_d,
+             pixel_x2_dd, pixel_y2_dd;
+  wire [8:0] pixel_x, pixel_y, // [0,320), [0,240)
+             pixel_x_d, pixel_y_d,
+             pixel_x_dd, pixel_y_dd;
 
   reg [4:0] block_x, block_y;
   reg [3:0] block_next_x, block_next_y;
@@ -125,6 +129,10 @@ module display import enum_type::*;
   );
   assign pixel_x = pixel_x2 >> 1;
   assign pixel_y = pixel_y2 >> 1;
+  assign pixel_x_d = pixel_x2_d >> 1;
+  assign pixel_y_d = pixel_y2_d >> 1;
+  assign pixel_x_dd = pixel_x2_dd >> 1;
+  assign pixel_y_dd = pixel_y2_dd >> 1;
 
   sram #(.DATA_WIDTH(12), .ADDR_WIDTH(17), .RAM_SIZE(BG_W*BG_H), .FILE("images.mem"))
     ram0 (.clk(clk), .we(sram_we), .en(sram_en),
@@ -134,6 +142,13 @@ module display import enum_type::*;
             .addr(sram_addr), .data_i(data_in), .data_o(data_out));
 
   assign {VGA_RED, VGA_GREEN, VGA_BLUE} = rgb_reg;
+
+  always @(posedge clk) begin
+    pixel_x2_d <= pixel_x2;
+    pixel_x2_dd <= pixel_x2_d;
+    pixel_y2_d <= pixel_y2;
+    pixel_y2_dd <= pixel_y2_d;
+  end
 
   always @(posedge clk) begin
     /*if (start && start_region)begin
@@ -163,16 +178,16 @@ module display import enum_type::*;
       endcase
     end
     else if (inside_scoreboard[0]) begin
-      pixel_addr <= num_addr[score_dec[0]] + (pixel_x - 64) + (pixel_y - 225) * NUM_W;
+      pixel_addr <= num_addr[score_dec[0]] + (pixel_x_dd - 64) + (pixel_y_dd - 225) * NUM_W;
     end
     else if (inside_scoreboard[1]) begin
-      pixel_addr <= num_addr[score_dec[1]] + (pixel_x - 71) + (pixel_y - 225) * NUM_W;
+      pixel_addr <= num_addr[score_dec[1]] + (pixel_x_dd - 71) + (pixel_y_dd - 225) * NUM_W;
     end
     else if (inside_scoreboard[2]) begin
-      pixel_addr <= num_addr[score_dec[2]] + (pixel_x - 78) + (pixel_y - 225) * NUM_W;
+      pixel_addr <= num_addr[score_dec[2]] + (pixel_x_dd - 78) + (pixel_y_dd - 225) * NUM_W;
     end
     else if (inside_scoreboard[3]) begin
-      pixel_addr <= num_addr[score_dec[3]] + (pixel_x - 85) + (pixel_y - 225) * NUM_W;
+      pixel_addr <= num_addr[score_dec[3]] + (pixel_x_dd - 85) + (pixel_y_dd - 225) * NUM_W;
     end
     else if (inside_next[0] && blockmask[next[0]][mask_next_y*4 + mask_next_x]) begin
         pixel_addr <= block_addr[next[0]] + (block_next_y)*BLOCK_W + block_next_x;
@@ -193,37 +208,37 @@ module display import enum_type::*;
   end
 
   always @(posedge clk) begin
-    tetris_x <= ~inside_tetris ? 0 : (pixel_x2 - 220) / 20;
-    tetris_y <= ~inside_tetris ? 0 : (pixel_y2 -  40) / 20;
-    block_x  <= ~inside_tetris ? 0 : (pixel_x2 - 220) % 20;
-    block_y  <= ~inside_tetris ? 0 : (pixel_y2 -  40) % 20;
-    block_next_x <= (pixel_x2) % 10;
-    block_next_y <= (pixel_y2) % 10;
-    mask_next_x <= 3 - (pixel_x2 - 430) / 10;
-    mask_next_y <= ((pixel_y2) / 10 + 1) % 2;
-    block_hold_x <= (pixel_x2 - 168) % 10;
-    block_hold_y <= (pixel_y2) %10;
-    mask_hold_x <= 3 - (pixel_x2 - 168) / 10;
-    mask_hold_y <= ((pixel_y2) / 10) % 2;
+    tetris_x <= (pixel_x2 - 220) / 20;
+    tetris_y <= (pixel_y2 -  40) / 20;
+    block_x  <= (pixel_x2_d - 220) % 20;
+    block_y  <= (pixel_y2_d -  40) % 20;
+    block_next_x <= (pixel_x2_d) % 10;
+    block_next_y <= (pixel_y2_d) % 10;
+    mask_next_x <= 3 - (pixel_x2_d - 430) / 10;
+    mask_next_y <= ((pixel_y2_d) / 10 + 1) % 2;
+    block_hold_x <= (pixel_x2_d - 168) % 10;
+    block_hold_y <= (pixel_y2_d) %10;
+    mask_hold_x <= 3 - (pixel_x2_d - 168) / 10;
+    mask_hold_y <= ((pixel_y2_d) / 10) % 2;
   end
 
   //area for tetris board
-  assign inside_tetris = (220 <= pixel_x2) & (pixel_x2 < 420) & (40 <= pixel_y2) & (pixel_y2 < 440);
+  assign inside_tetris = (220 <= pixel_x2_dd) & (pixel_x2_dd < 420) & (40 <= pixel_y2_dd) & (pixel_y2_dd < 440);
   //area for start/end
-  assign start_region = (220 <= pixel_x2) & (pixel_x2 < 420) & (207 <= pixel_y2) & (pixel_y2 < 273);
-  assign end_region = (220 <= pixel_x2) & (pixel_x2 < 420) & (210 <= pixel_y2) & (pixel_y2 < 270);
+  assign start_region = (220 <= pixel_x2_dd) & (pixel_x2_dd < 420) & (207 <= pixel_y2_dd) & (pixel_y2_dd < 273);
+  assign end_region = (220 <= pixel_x2_dd) & (pixel_x2_dd < 420) & (210 <= pixel_y2_dd) & (pixel_y2_dd < 270);
   //area for scoreboard
-  assign inside_scoreboard[0] = (64 <= pixel_x) & (pixel_x < 69) & (225 <= pixel_y) & (pixel_y < 234);
-  assign inside_scoreboard[1] = (71 <= pixel_x) & (pixel_x < 76) & (225 <= pixel_y) & (pixel_y < 234);
-  assign inside_scoreboard[2] = (78 <= pixel_x) & (pixel_x < 83) & (225 <= pixel_y) & (pixel_y < 234);
-  assign inside_scoreboard[3] = (85 <= pixel_x) & (pixel_x < 90) & (225 <= pixel_y) & (pixel_y < 234);
+  assign inside_scoreboard[0] = (64 <= pixel_x_dd) & (pixel_x_dd < 69) & (225 <= pixel_y_dd) & (pixel_y_dd < 234);
+  assign inside_scoreboard[1] = (71 <= pixel_x_dd) & (pixel_x_dd < 76) & (225 <= pixel_y_dd) & (pixel_y_dd < 234);
+  assign inside_scoreboard[2] = (78 <= pixel_x_dd) & (pixel_x_dd < 83) & (225 <= pixel_y_dd) & (pixel_y_dd < 234);
+  assign inside_scoreboard[3] = (85 <= pixel_x_dd) & (pixel_x_dd < 90) & (225 <= pixel_y_dd) & (pixel_y_dd < 234);
   //area for next block
-  assign inside_next[3] = (430 < pixel_x2) & (470 > pixel_x2) & (180 <= pixel_y2) & (200 > pixel_y2 );
-  assign inside_next[2] = (430 < pixel_x2) & (470 > pixel_x2) & (140 <= pixel_y2) & (160 > pixel_y2 );
-  assign inside_next[1] = (430 < pixel_x2) & (470 > pixel_x2) & (100 <= pixel_y2) & (120 > pixel_y2 );
-  assign inside_next[0] = (430 < pixel_x2) & (470 > pixel_x2) & (60 <= pixel_y2) & (80 > pixel_y2 );
+  assign inside_next[3] = (430 < pixel_x2_dd) & (470 > pixel_x2_dd) & (180 <= pixel_y2_dd) & (200 > pixel_y2_dd );
+  assign inside_next[2] = (430 < pixel_x2_dd) & (470 > pixel_x2_dd) & (140 <= pixel_y2_dd) & (160 > pixel_y2_dd );
+  assign inside_next[1] = (430 < pixel_x2_dd) & (470 > pixel_x2_dd) & (100 <= pixel_y2_dd) & (120 > pixel_y2_dd );
+  assign inside_next[0] = (430 < pixel_x2_dd) & (470 > pixel_x2_dd) & (60 <= pixel_y2_dd) & (80 > pixel_y2_dd );
   //area for hold
-  assign inside_hold = (168 < pixel_x2) & (208 > pixel_x2) & (70 <= pixel_y2) & (90 > pixel_y2 );
+  assign inside_hold = (168 < pixel_x2_dd) & (208 > pixel_x2_dd) & (70 <= pixel_y2_dd) & (90 > pixel_y2_dd );
 
   assign score_dec[3] = tetris_score[ 0+:4];
   assign score_dec[2] = tetris_score[ 4+:4];
@@ -254,7 +269,7 @@ module display import enum_type::*;
     if (~reset_n)
       bg_addr_reg <= 0;
     else 
-      bg_addr_reg <= pixel_y * BG_W + pixel_x;
+      bg_addr_reg <= pixel_y_dd * BG_W + pixel_x_dd;
   end
 
 endmodule
