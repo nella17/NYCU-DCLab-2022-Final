@@ -18,10 +18,10 @@ module vga_sync_reg(
   wire [9:0] pixel_x_;
   wire [9:0] pixel_y_;
 
-  reg oHS_reg;
-  reg oVS_reg;
-  reg visible_reg;
-  reg p_tick_reg;
+  reg oHS_reg [3:0];
+  reg oVS_reg [3:0];
+  reg visible_reg [3:0];
+  reg p_tick_reg [3:0];
 
   vga_sync vga_sync_0(
     .clk(clk), 
@@ -35,15 +35,32 @@ module vga_sync_reg(
   );
 
   always @(posedge clk) begin
-    oHS_reg <= oHS_;
-    oHS <= oHS_reg;
-    oVS_reg <= oVS_;
-    oVS <= oVS_reg;
-    visible_reg <= visible_;
-    visible <= visible_reg;
-    p_tick_reg <= p_tick_;
-    p_tick <= p_tick_reg;
+    oHS        <= oHS_reg[3];
+    oHS_reg[3] <= oHS_reg[2];
+    oHS_reg[2] <= oHS_reg[1];
+    oHS_reg[1] <= oHS_reg[0];
+    oHS_reg[0] <= oHS_;
+
+    oVS        <= oVS_reg[3];
+    oVS_reg[3] <= oVS_reg[2];
+    oVS_reg[2] <= oVS_reg[1];
+    oVS_reg[1] <= oVS_reg[0];
+    oVS_reg[0] <= oVS_;
+    
+    visible        <= visible_reg[3];
+    visible_reg[3] <= visible_reg[2];
+    visible_reg[2] <= visible_reg[1];
+    visible_reg[1] <= visible_reg[0];
+    visible_reg[0] <= visible_;
+
+    p_tick        <= p_tick_reg[3];
+    p_tick_reg[3] <= p_tick_reg[2];
+    p_tick_reg[2] <= p_tick_reg[1];
+    p_tick_reg[1] <= p_tick_reg[0];
+    p_tick_reg[0] <= p_tick_;
+
     pixel_x <= pixel_x_;
+
     pixel_y <= pixel_y_;
   end
 

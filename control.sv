@@ -27,7 +27,7 @@ module control import enum_type::*;
   wire is_receiving, is_transmitting, recv_error;
 
   uart #(
-    .CLOCK_DIVIDE(326)
+    .CLOCK_DIVIDE(163)
   ) uart (
     .clk(clk),
     .rst(~reset_n),

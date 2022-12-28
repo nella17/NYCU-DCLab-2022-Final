@@ -28,7 +28,7 @@ module final_project import enum_type::*;
 );
 
   // General VGA control signals
-  wire clk_50MHz;       // 50MHz clock for VGA control
+  wire clk_25MHz;       // 25MHz clock for VGA control
 
   wire [4:0] tetris_x, tetris_y;
   state_type tetris_ctrl, tetris_state;
@@ -44,18 +44,18 @@ module final_project import enum_type::*;
   wire [31:0] rng;
 
   clk_wiz_0 clk_wiz_0_0(
-    .clk_50MHz(clk_50MHz),
+    .clk_25MHz(clk_25MHz),
     .clk_in1(clk)
   );
 
   prng prng0(
-    .clk(clk_50MHz),
+    .clk(clk_25MHz),
     .reset_n(reset_n),
     .rng(rng)
   );
 
   control control0(
-    .clk(clk_50MHz),
+    .clk(clk_25MHz),
     .reset_n(reset_n),
     .rng(rng),
     .usr_btn(usr_btn),
@@ -72,7 +72,7 @@ module final_project import enum_type::*;
   );
 
   tetris tetris0(
-    .clk(clk_50MHz),
+    .clk(clk_25MHz),
     .reset_n(reset_n),
     .rng(rng),
     .x(tetris_x),
@@ -91,7 +91,7 @@ module final_project import enum_type::*;
   );
 
   display display0(
-    .clk(clk_50MHz),
+    .clk(clk_25MHz),
     .reset_n(reset_n),
     .start(start),
     .over(over),
@@ -118,7 +118,7 @@ module final_project import enum_type::*;
   reg [127:0] row_B = row_init;
 
   LCD_module lcd0(
-    .clk(clk_50MHz),
+    .clk(clk_25MHz),
     .reset(~reset_n),
     .row_A(row_A),
     .row_B(row_B),
@@ -130,14 +130,14 @@ module final_project import enum_type::*;
 
   wire [7:0] ns = tetris_state;
   reg [7:0] nc = 0;
-  always_ff @(posedge clk_50MHz)
+  always_ff @(posedge clk_25MHz)
       if (~reset_n)
           nc <= 0;
       else if (tetris_ctrl != NONE)
           nc <= tetris_ctrl;
 
   reg [7:0] i;
-  always_ff @(posedge clk_50MHz) begin
+  always_ff @(posedge clk_25MHz) begin
     if (~reset_n)
       { row_A, row_B } <= { row_init, row_init };
     else begin

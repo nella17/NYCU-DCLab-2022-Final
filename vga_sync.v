@@ -38,9 +38,6 @@ module vga_sync(
    parameter VB = 33;  // v. back (bottom) border
    parameter VR = 2;   // v. retrace
 
-   // mod-2 counter
-   reg mod2_reg;
-   wire mod2_next;
    // sync counters
    reg [9:0] h_count_reg, h_count_next;
    reg [9:0] v_count_reg, v_count_next;
@@ -54,7 +51,6 @@ module vga_sync(
    always @(posedge clk) begin
       if (reset)
          begin
-            mod2_reg <= 1'b0;
             v_count_reg <= 0;
             h_count_reg <= 0;
             v_sync_reg <= 1'b0;
@@ -62,7 +58,6 @@ module vga_sync(
          end
       else
          begin
-            mod2_reg <= mod2_next;
             v_count_reg <= v_count_next;
             h_count_reg <= h_count_next;
             v_sync_reg <= v_sync_next;
@@ -70,8 +65,7 @@ module vga_sync(
          end
     end
    // mod-2 circuit to generate 25 MHz enable tick
-   assign mod2_next = ~mod2_reg;
-   assign pixel_tick = mod2_reg;
+   assign pixel_tick = ~clk;
 
    // end of horizontal counter (799)
    assign h_end = (h_count_reg==(HD+HF+HB+HR-1));
