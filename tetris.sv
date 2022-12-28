@@ -423,7 +423,9 @@ module tetris import enum_type::*;
   end
 
   always_ff @(posedge clk) begin
-    if (curr_mask_updated)
+    if (state == INIT)
+      preview_mask <= 0;
+    else if (curr_mask_updated)
       preview_mask <= curr_mask;
     else if (pvalid)
       preview_mask <= preview_down_mask;
