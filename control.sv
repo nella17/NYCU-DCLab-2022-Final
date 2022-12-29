@@ -70,13 +70,13 @@ module control import enum_type::*;
 
   logic [$clog2(SEC_TICK)+2:0] sec_cnt;
   logic [$clog2(MSEC_TICK)+2:0] msec_cnt;
-  logic [$clog2(DOWN_MS)+2:0] down_cnt, down_ms;
+  logic [$clog2(DOWN_TICK)+2:0] down_cnt, down_tick;
   logic [$clog2(BAR_TICK)+2:0] bar_cnt;
   logic [$clog2(OVER_TICK)+2:0] over_cnt;
   state_type next = NONE;
 
-  logic sec_clk = sec_cnt == SEC_TICK-1;  
-  logic msec_clk = msec_cnt == MSEC_TICK-1;  
+  logic sec_clk = sec_cnt == SEC_TICK-1;
+  logic msec_clk = msec_cnt == MSEC_TICK-1;
 
   always_ff @(posedge clk)
     if (~reset_n)
@@ -110,35 +110,29 @@ module control import enum_type::*;
 
   localparam SCORE_BIT = 4;
 
-  logic [4*4-1:0] score_pow_table [SCORE_BIT:0];
-  logic [$clog2(SCORE_BIT):0] j;
-  initial
-    for (j = 0; j <= SCORE_BIT; j = j + 1)
-        score_pow_table[j] = 1 << j;
-
   logic [SCORE_BIT:0] score_pow;
   always_ff @(posedge clk)
     if (~reset_n || ~during)
         score_pow <= 1;
     else
-        score_pow <= score_pow + (score >= score_pow_table[score_pow]);
+        score_pow <= score_pow + ((score >> score_pow) & 1);
 
   always_ff @(posedge clk)
     if (~reset_n)
-      down_ms <= DOWN_MS;
-    else
-      down_ms <= DOWN_MS / score_pow;
+      down_tick <= DOWN_TICK;
+    else if (msec_clk)
+      down_tick <= down_tick - score_pow;
 
   always_ff @(posedge clk)
     if (~reset_n || ~during)
       down_cnt <= 0;
     else if (next == DOWN)
-      if (down_cnt < down_ms)
+      if (down_cnt < down_tick)
         down_cnt <= 0;
       else
-        down_cnt <= down_cnt - down_ms;
+        down_cnt <= down_cnt - down_tick;
     else
-      down_cnt <= down_cnt + msec_clk;
+      down_cnt <= down_cnt + 1;
 
   always_ff @(posedge clk)
     if (~reset_n || ~during)
@@ -172,7 +166,7 @@ module control import enum_type::*;
         if (over && over_cnt < OVER_TICK)
           next = NONE;
       end else begin
-        if (down_cnt >= down_ms)
+        if (down_cnt >= down_tick)
           next = DOWN;
         if (bar_cnt >= BAR_TICK)
           next = BAR;
