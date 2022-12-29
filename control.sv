@@ -81,10 +81,9 @@ module control import enum_type::*;
       start <= ~over;
   assign over = start && (count_down == 0 || state == END);
   logic during = start && ~over;
-  logic reset = ~reset || ~during;
 
   always_ff @(posedge clk)
-    if (reset)
+    if (~reset_n || ~during)
       sec_cnt <= 0;
     else if (sec_cnt == SEC_TICK-1)
       sec_cnt <= 0;
@@ -92,26 +91,26 @@ module control import enum_type::*;
       sec_cnt <= sec_cnt + 1;
 
   always_ff @(posedge clk)
-    if (reset)
+    if (~reset_n || ~start)
       count_down <= COUNT_SEC;
     else
       count_down <= count_down - (sec_cnt == SEC_TICK-1) + score_inc;
 
   logic [4:0] score_pow = 1;
   always_ff @(posedge clk)
-    if (reset)
+    if (~reset_n || ~during)
         score_pow <= 1;
     else
         score_pow <= score_pow + (score >= (1 << score_pow));
 
   always_ff @(posedge clk)
-    if (reset)
+    if (~reset_n)
       down_tick <= DOWN_TICK;
     else
       down_tick <= DOWN_TICK / score_pow;
 
   always_ff @(posedge clk)
-    if (reset)
+    if (~reset_n || ~during)
       down_cnt <= 0;
     else if (next == DOWN)
       if (down_cnt < down_tick)
@@ -122,7 +121,7 @@ module control import enum_type::*;
       down_cnt <= down_cnt + 1;
 
   always_ff @(posedge clk)
-    if (reset)
+    if (~reset_n || ~during)
       bar_cnt <= 0;
     else if (next == BAR)
       if (bar_cnt < BAR_TICK)
