@@ -140,7 +140,7 @@ module control import enum_type::*;
     if (reset_n) begin
       if (~during) begin
         if (received || |debounced_btn || |press_sw)
-          next = WAIT;
+          next = INIT;
         if (over && over_cnt < OVER_TICK)
           next = NONE;
       end else begin

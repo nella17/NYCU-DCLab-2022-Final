@@ -205,7 +205,7 @@ module tetris import enum_type::*;
       GEN:
         next_state = WAIT;
       WAIT:
-        if (ctrl != NONE)
+        if (ctrl > WAIT)
           next_state = ctrl;
         else
           next_state = WAIT;
