@@ -75,36 +75,17 @@ wire [3:0] kind, hold, next [0:3];
 
 ### Control
 
-- NONE
-- LEFT
-  - A
-  - btn3
-  - arrow key left ➜
-- RIGHT
-  - D
-  - btn0
-  - arrow key right
-- DOWN
-  - S
-  - btn1
-  - arrow key down
-- DROP
-  - W
-  - space
-  - sw0
-- HOLD
-  - C
-  - sw1
-- ROTATE
-  - X
-  - btn3
-  - arrow key up
-- ROTATE_REV
-  - Z
-  - sw2
-- BAR
-  - B
-  - sw3
+|   State    | Button | Switch |   UART    |
+| :--------: | :----: | :----: | :-------: |
+|    NONE    |        |        |           |
+|    LEFT    |   3    |        |    A ⬅️    |
+|   RIGHT    |   0    |        |    D ➡️    |
+|    DOWN    |   1    |        |    S ⬇️    |
+|    DROP    |        |   0    | W [space] |
+|    HOLD    |        |   1    |     C     |
+|   ROTATE   |   3    |        |     X     |
+| ROTATE_REV |        |   2    |     Z     |
+|    BAR     |        |   3    |     B     |
 
 ### Tetris
 
