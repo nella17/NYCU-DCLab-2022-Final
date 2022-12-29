@@ -140,11 +140,11 @@ module control import enum_type::*;
     if (reset_n) begin
       if (~during) begin
         if (received || |debounced_btn || |press_sw)
-          next = INIT;
+          next = over ? END : INIT;
         if (over && over_cnt < OVER_TICK)
           next = NONE;
       end else begin
-        if (down_cnt >= DOWN_TICK)
+        if (down_cnt >= down_tick)
           next = DOWN;
         if (bar_cnt >= BAR_TICK)
           next = BAR;
