@@ -8,7 +8,7 @@ module display import enum_type::*;
   input  start,
   input  over,
   input  [$clog2(COUNT_SEC)+2:0] count_down,
-  input  [4*4-1:0] tetris_score,
+  input  [4*4-1:0] tetris_score_bcd,
   input  [3:0] kind,
   input  [3:0] hold,
   input  [3:0] next [0:3],
@@ -308,10 +308,10 @@ module display import enum_type::*;
   assign combo_number_region = (437 <= pixel_x2_dd) & (pixel_x2_dd < 457) & (344 <= pixel_y2_dd) & (pixel_y2_dd < 380);
   assign t_spin_region = (92 <= pixel_x_dd) & (pixel_x_dd < 98) & (226 <= pixel_y_dd) & (pixel_y_dd < 235);
 
-  assign score_dec[3] = tetris_score[ 0+:4];
-  assign score_dec[2] = tetris_score[ 4+:4];
-  assign score_dec[1] = tetris_score[ 8+:4];
-  assign score_dec[0] = tetris_score[12+:4];
+  assign score_dec[3] = tetris_score_bcd[ 0+:4];
+  assign score_dec[2] = tetris_score_bcd[ 4+:4];
+  assign score_dec[1] = tetris_score_bcd[ 8+:4];
+  assign score_dec[0] = tetris_score_bcd[12+:4];
 
   // ------------------------------------------------------------------------
   // Send the video data in the sram to the VGA controller

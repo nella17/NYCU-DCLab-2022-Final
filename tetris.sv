@@ -13,7 +13,7 @@ module tetris import enum_type::*;
   input [9:0] bar_mask,
 
   output state_type state,
-  output reg [4*4-1:0] score,  // 0xABCD BCD
+  output reg [4*4-1:0] score_bcd,  // 0xABCD BCD
   output score_inc,
   output reg [3:0] kind,
   output reg [3:0] hold,
@@ -501,9 +501,9 @@ module tetris import enum_type::*;
   generate for(gi = 0; gi < 4; gi = gi+1)
     always_ff @(posedge clk)
       if (~reset_n || state == INIT)
-        score[gi*4+:4] <= 0;
+        score_bcd[gi*4+:4] <= 0;
       else
-        { score_carry[gi+1], score[gi*4+:4] } <= `BCD_ADD(score[gi*4+:4], score_carry[gi]);
+        { score_carry[gi+1], score_bcd[gi*4+:4] } <= `BCD_ADD(score_bcd[gi*4+:4], score_carry[gi]);
   endgenerate
 
 endmodule

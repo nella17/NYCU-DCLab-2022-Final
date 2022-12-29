@@ -33,7 +33,7 @@ module final_project import enum_type::*;
   wire [4:0] tetris_x, tetris_y;
   state_type tetris_ctrl, tetris_state;
   wire [9:0] tetris_bar_mask;
-  wire [4*4-1:0] tetris_score;
+  wire [4*4-1:0] tetris_score_bcd, tetris_score;
   wire score_inc;
   wire [3:0] tetris_kind, tetris_hold, tetris_next[0:3];
   wire hold_locked, start, over;
@@ -41,6 +41,12 @@ module final_project import enum_type::*;
   logic [4:0] pending_counter;
   wire [2*4-1:0] combo;
   wire t_spin;
+
+  always_ff @(posedge clk)
+    if (~reset_n || ~during)
+        tetris_score <= 0;
+    else
+        tetris_score <= tetris_score + score_inc;
 
   wire [31:0] rng;
 
@@ -82,7 +88,7 @@ module final_project import enum_type::*;
     .ctrl(tetris_ctrl),
     .bar_mask(tetris_bar_mask),
     .state(tetris_state),
-    .score(tetris_score),
+    .score_bcd(tetris_score_bcd),
     .score_inc(score_inc),
     .kind(tetris_kind),
     .hold(tetris_hold),
@@ -98,7 +104,7 @@ module final_project import enum_type::*;
     .reset_n(reset_n),
     .start(start),
     .over(over),
-    .tetris_score(tetris_score),
+    .tetris_score_bcd(tetris_score_bcd),
     .kind(tetris_kind),
     .hold(tetris_hold),
     .next(tetris_next),
@@ -148,7 +154,7 @@ module final_project import enum_type::*;
     else begin
       `N2T(i, 2, ns, 0, row_A, 0)
       `N2T(i, 2, nc, 0, row_B, 0)
-      `N2T(i, 4, tetris_score, 0, row_B, 8)
+      `N2T(i, 4, tetris_score_bcd, 0, row_B, 8)
       `N2T(i, 2, {3'b000, pending_counter}, 0, row_A, 8)
       `N2T(i, 2, combo, 0, row_B, 14)
       `N2T(i, 1, {3'b000, t_spin}, 0, row_A, 14)
