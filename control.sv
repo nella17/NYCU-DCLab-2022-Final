@@ -77,7 +77,7 @@ module control import enum_type::*;
   always_ff @(posedge clk)
     if (~reset_n)
       start <= 0;
-    else if (next == INIT)
+    else if (next == INIT || next == END)
       start <= ~over;
   assign over = start && (count_down == 0 || state == END);
   logic during = start && ~over;
