@@ -34,6 +34,7 @@ module final_project import enum_type::*;
   state_type tetris_ctrl, tetris_state;
   wire [9:0] tetris_bar_mask;
   wire [4*4-1:0] tetris_score;
+  wire score_inc;
   wire [3:0] tetris_kind, tetris_hold, tetris_next[0:3];
   wire hold_locked, start, over;
   logic [$clog2(COUNT_SEC)+2:0] count_down;
@@ -64,6 +65,7 @@ module final_project import enum_type::*;
     .uart_tx(uart_tx),
     .state(tetris_state),
     .score(tetris_score),
+    .score_inc(score_inc),
     .control(tetris_ctrl),
     .bar_mask(tetris_bar_mask),
     .start(start),
@@ -81,6 +83,7 @@ module final_project import enum_type::*;
     .bar_mask(tetris_bar_mask),
     .state(tetris_state),
     .score(tetris_score),
+    .score_inc(score_inc),
     .kind(tetris_kind),
     .hold(tetris_hold),
     .next(tetris_next),

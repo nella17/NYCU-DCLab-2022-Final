@@ -14,6 +14,7 @@ module tetris import enum_type::*;
 
   output state_type state,
   output reg [4*4-1:0] score,  // 0xABCD BCD
+  output score_inc,
   output reg [3:0] kind,
   output reg [3:0] hold,
   output reg [3:0] next [0:3],
@@ -452,6 +453,7 @@ module tetris import enum_type::*;
   reg [7:0] combo_score = 0;
   reg [7:0] score_pending = 0;
   reg [4:0] score_carry = 0;
+  assign score_inc = score_carry[0];
   wire t_spin_detected = (last_move[1] == 1) && (last_move[0] == 0) && (curr_kind == 6);
   always_ff @(posedge clk) begin
     score_carry[0] <= 0;

@@ -11,6 +11,7 @@ module control import enum_type::*;
   output uart_tx,
   input  state_type state,
   input  [4*4-1:0] score,
+  input  score_inc,
   output state_type control,
   output logic [9:0] bar_mask,
   output logic start,
@@ -92,8 +93,8 @@ module control import enum_type::*;
   always_ff @(posedge clk)
     if (~reset_n || ~start)
       count_down <= COUNT_SEC;
-    else if (sec_cnt == SEC_TICK-1)
-      count_down <= count_down - 1;
+    else
+      count_down <= count_down - (sec_cnt == SEC_TICK-1) + score_inc;
 
   always_ff @(posedge clk)
     if (~reset_n)
