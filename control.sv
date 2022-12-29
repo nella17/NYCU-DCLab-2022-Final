@@ -99,10 +99,10 @@ module control import enum_type::*;
   localparam SCORE_BIT = 4;
 
   logic [4*4-1:0] score_pow_table [SCORE_BIT:0];
-  generate
-    for (gi = 0; gi <= 4; gi = gi + 1)
-        assign score_pow_table[gi] = 1 << gi;
-  endgenerate
+  logic [$clog2(SCORE_BIT):0] j;
+  initial
+    for (j = 0; j <= SCORE_BIT; j = j + 1)
+        score_pow_table[j] = 1 << j;
 
   logic [SCORE_BIT:0] score_pow = 1;
   always_ff @(posedge clk)
