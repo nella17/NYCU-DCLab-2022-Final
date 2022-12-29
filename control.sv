@@ -96,11 +96,18 @@ module control import enum_type::*;
     else
       count_down <= count_down - (sec_cnt == SEC_TICK-1) + score_inc;
 
+  logic [4:0] score_pow = 1;
+  always_ff @(posedge clk)
+    if (~reset_n)
+        score_pow <= 1;
+    else
+        score_pow <= score_pow + (score >= (1 << score_pow));
+
   always_ff @(posedge clk)
     if (~reset_n)
       down_tick <= DOWN_TICK;
     else
-      down_tick <= DOWN_TICK / score;
+      down_tick <= DOWN_TICK / score_pow;
 
   always_ff @(posedge clk)
     if (~reset_n || ~during)
