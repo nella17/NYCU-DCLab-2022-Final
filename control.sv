@@ -70,7 +70,7 @@ module control import enum_type::*;
 
   logic [$clog2(SEC_TICK)+2:0] sec_cnt;
   logic [$clog2(MSEC_TICK)+2:0] msec_cnt;
-  logic [$clog2(DOWN_TICK)+2:0] down_cnt, down_tick, down_cut;
+  logic [$clog2(DOWN_TICK)+2:0] down_cnt, down_tick;
   logic [$clog2(BAR_TICK)+2:0] bar_cnt;
   logic [$clog2(OVER_TICK)+2:0] over_cnt;
   state_type next = NONE;
@@ -108,26 +108,11 @@ module control import enum_type::*;
     else
       count_down <= count_down - sec_clk + score_inc;
 
-  localparam SCORE_BIT = 4;
-
-  logic [SCORE_BIT:0] score_pow;
-  always_ff @(posedge clk)
-    if (~reset_n || ~during)
-        score_pow <= 1;
-    else
-        score_pow <= score_pow + ((score >> score_pow) & 1);
-
-  always_ff @(posedge clk)
-    if (~reset_n || ~during || score_inc)
-      down_cut <= 1;
-    else if (msec_clk)
-      down_cut <= down_cut + (1 << score_pow);
-
   always_ff @(posedge clk)
     if (~reset_n || ~during)
       down_tick <= DOWN_TICK;
-    else if (down_tick >= MSEC_TICK && score_inc && usr_sw[3])
-      down_tick <= down_tick * 127 / 128;
+    else if (down_tick >= MSEC_TICK && score_inc && ~usr_sw[3])
+      down_tick <= down_tick * 125 / 128;
 
   always_ff @(posedge clk)
     if (~reset_n || ~during)
