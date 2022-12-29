@@ -14,6 +14,8 @@ module display import enum_type::*;
   input  [3:0] next [0:3],
   input  hold_locked,
   input  [4:0] pending_mask,
+  input  t_spin,
+  input  [7:0] combo,
   output reg [4:0] tetris_x, tetris_y,
 
   // VGA specific I/O ports
@@ -40,6 +42,10 @@ module display import enum_type::*;
   reg [3:0] block_hold_x, block_hold_y;
   reg [1:0] mask_next_x;
   reg [1:0] mask_hold_x;
+  reg [9:0] start_x;
+  reg [9:0] start_y;
+  reg [9:0] end_x;
+  reg [9:0] end_y;
   reg mask_next_y;
   reg mask_hold_y;
 
@@ -155,12 +161,12 @@ module display import enum_type::*;
 
   always @(posedge clk) begin
     if (~start)begin
-      if (start_region) pixel_addr <= interface_addr[0] + (pixel_x2_dd - 220) + ((pixel_y2_dd -  174)) * INTERFACE_W;
+      if (start_region) pixel_addr <= interface_addr[0] + start_x + start_y * INTERFACE_W;
       else pixel_addr <= block_addr[10]; 
     end
-
-    else if(over && end_region)begin
-      pixel_addr <= interface_addr[1] + (pixel_x2_dd - 220) >> 1 + ((pixel_y2_dd -  180)) * INTERFACE_W;
+    else if(over)begin
+      if (end_region) pixel_addr <= interface_addr[1] + end_x + end_y * INTERFACE_W;
+      else pixel_addr <= block_addr[10];
     end
     else if (inside_tetris) begin
       case (kind)
@@ -218,6 +224,9 @@ module display import enum_type::*;
   always @(posedge clk) begin
     tetris_x <= (pixel_x2 - 220) / 20;
     tetris_y <= (pixel_y2 -  40) / 20;
+  end
+  
+  always @(posedge clk) begin
     block_x  <= (pixel_x2_d - 220) % 20;
     block_y  <= (pixel_y2_d -  40) % 20;
     block_next_x <= (pixel_x2_d) % 10;
@@ -228,6 +237,10 @@ module display import enum_type::*;
     block_hold_y <= (pixel_y2_d) %10;
     mask_hold_x <= 3 - (pixel_x2_d - 168) / 10;
     mask_hold_y <= ((pixel_y2_d) / 10) % 2;
+    start_x <= ((pixel_x2_d) - 220) >> 1;
+    start_y <= ((pixel_y2_d) - 174) >> 1;
+    end_x <= ((pixel_x2_d) - 220) >> 1;
+    end_y <= ((pixel_y2_d) - 180) >> 1;
   end
 
   always @(posedge clk) begin
@@ -238,8 +251,8 @@ module display import enum_type::*;
   //area for tetris board
   assign inside_tetris = (220 <= pixel_x2_dd) & (pixel_x2_dd < 420) & (40 <= pixel_y2_dd) & (pixel_y2_dd < 440);
   //area for start/end
-  assign start_region = (220 <= pixel_x2_dd) & (pixel_x2_dd < 420 - 100) & (174 <= pixel_y2_dd) & (pixel_y2_dd < 306 - 66);
-  assign end_region = (220 <= pixel_x2_dd) & (pixel_x2_dd < 420 - 100) & (180 <= pixel_y2_dd) & (pixel_y2_dd < 300 - 60);
+  assign start_region = (220 <= pixel_x2_dd) & (pixel_x2_dd < 420) & (174 <= pixel_y2_dd) & (pixel_y2_dd < 306);
+  assign end_region = (220 <= pixel_x2_dd) & (pixel_x2_dd < 420) & (180 <= pixel_y2_dd) & (pixel_y2_dd < 300);
   assign clock_region = (189 <= pixel_x2_dd) & (pixel_x2_dd < 215) & (117 <= pixel_y2_dd) & (pixel_y2_dd < 439);
   //area for scoreboard
   assign inside_scoreboard[0] = (64 <= pixel_x_dd) & (pixel_x_dd < 69) & (225 <= pixel_y_dd) & (pixel_y_dd < 234);

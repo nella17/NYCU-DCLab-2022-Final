@@ -101,6 +101,8 @@ module final_project import enum_type::*;
     .next(tetris_next),
     .hold_locked(hold_locked),
     .count_down(count_down),
+    .t_spin(t_spin),
+    .combo(combo),
     .tetris_x(tetris_x),
     .tetris_y(tetris_y),
     .VGA_HSYNC(VGA_HSYNC),
