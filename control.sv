@@ -70,7 +70,7 @@ module control import enum_type::*;
 
   logic [$clog2(SEC_TICK)+2:0] sec_cnt;
   logic [$clog2(MSEC_TICK)+2:0] msec_cnt;
-  logic [$clog2(DOWN_TICK)+2:0] down_cnt, down_tick;
+  logic [$clog2(DOWN_MS)+2:0] down_cnt, down_ms;
   logic [$clog2(BAR_TICK)+2:0] bar_cnt;
   logic [$clog2(OVER_TICK)+2:0] over_cnt;
   state_type next = NONE;
@@ -125,18 +125,18 @@ module control import enum_type::*;
 
   always_ff @(posedge clk)
     if (~reset_n)
-      down_tick <= DOWN_TICK;
+      down_ms <= DOWN_MS;
     else
-      down_tick <= DOWN_TICK / score_pow;
+      down_ms <= DOWN_MS / score_pow;
 
   always_ff @(posedge clk)
     if (~reset_n || ~during)
       down_cnt <= 0;
     else if (next == DOWN)
-      if (down_cnt < down_tick)
+      if (down_cnt < down_ms)
         down_cnt <= 0;
       else
-        down_cnt <= down_cnt - down_tick;
+        down_cnt <= down_cnt - down_ms;
     else
       down_cnt <= down_cnt + msec_clk;
 
@@ -172,7 +172,7 @@ module control import enum_type::*;
         if (over && over_cnt < OVER_TICK)
           next = NONE;
       end else begin
-        if (down_cnt >= down_tick)
+        if (down_cnt >= down_ms)
           next = DOWN;
         if (bar_cnt >= BAR_TICK)
           next = BAR;
