@@ -96,7 +96,7 @@ module control import enum_type::*;
     else
       count_down <= count_down - (sec_cnt == SEC_TICK-1) + score_inc;
 
-  logic [4:0] score_pow = 1;
+  logic [2:0] score_pow = 1;
   always_ff @(posedge clk)
     if (~reset_n || ~during)
         score_pow <= 1;
