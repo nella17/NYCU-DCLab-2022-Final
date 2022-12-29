@@ -4,34 +4,35 @@
 
 - 基本功能 60% 16pts
     - [x] 畫出俄羅斯方塊的背景。 10 x 20
-    - [x] 畫出至少7種不同方塊。  
+    - [x] 畫出至少 7 種不同方塊。  
       1.I 2.J 3.L 4.O 5.S 6.T 7.Z  
       0.none 8.bar 9.preview
          ![](https://learnopencv.com/wp-content/uploads/2020/11/tetris-pieces.png)
     - [x] 會越疊愈高，並且可消除，往下掉。
     - [x] 方塊可旋轉。
     - [x] 遊戲畫面有邊界。
-    - [x] 使用button或是switch進行控制遊戲與互動。
+    - [x] 使用 button 或是 switch 進行控制遊戲與互動。
 - 進階功能 40% 12pts
     - [x] 設計計分系統。
       - [x] 依照消除行數決定分數
       - [x] combo
-      - [x] T轉
-    - [x] T轉。
-    - [x] 有Buffer功能可以換方塊。
+      - [x] T 轉
+    - [x] T 轉。
+    - [x] 有 Buffer 功能可以換方塊。
     - [x] 隨機生成障礙。
 - 額外功能 20% 6pts
-    - [ ] 使用者介面 (如: 介面精緻等)
+    - [ ] 使用者介面（如：介面精緻等）
       - [x] 開始畫面
       - [x] 結束畫面
       - [x] 倒數計時進度條
-      - [ ] ~~bar預覽~~
-      - [ ] combo次數顯示
-      - [ ] T轉顯示
-    - [x] 使用者體驗 (如: 流暢度等)
+      - [ ] ~~bar 預覽~~
+      - [ ] combo 次數顯示
+      - [ ] T 轉顯示
+    - [x] 使用者體驗（如：流暢度等）
       - [x] 掉落方塊位置預覽
+      - [ ] 得分增加時間
       - [x] 方塊掉落加速
-      - [x] uart 控制
+      - [x] UART 控制
     - [x] 添加創新的功能
       - [x] 倒數計時
 
@@ -78,7 +79,7 @@ wire [3:0] kind, hold, next [0:3];
 - LEFT
   - A
   - btn3
-  - arrow key left
+  - arrow key left ➜
 - RIGHT
   - D
   - btn0
