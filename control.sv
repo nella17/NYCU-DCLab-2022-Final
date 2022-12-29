@@ -118,15 +118,15 @@ module control import enum_type::*;
         score_pow <= score_pow + ((score >> score_pow) & 1);
 
   always_ff @(posedge clk)
-    if (~reset_n || ~during)
+    if (~reset_n || ~during || score_inc)
       down_cut <= 1;
     else if (msec_clk)
-      down_cut <= down_cut + (1 << (score_pow * 3));
+      down_cut <= down_cut + (1 << score_pow);
 
   always_ff @(posedge clk)
     if (~reset_n || ~during)
       down_tick <= DOWN_TICK;
-    else if (msec_clk)
+    else if (msec_clk && down_tick >= MSEC_TICK)
       down_tick <= down_tick - down_cut;
 
   always_ff @(posedge clk)
