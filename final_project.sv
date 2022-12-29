@@ -33,7 +33,7 @@ module final_project import enum_type::*;
   wire [4:0] tetris_x, tetris_y;
   state_type tetris_ctrl, tetris_state;
   wire [9:0] tetris_bar_mask;
-  wire [4*4-1:0] tetris_score_bcd, tetris_score;
+  logic [4*4-1:0] tetris_score_bcd, tetris_score;
   wire score_inc;
   wire [3:0] tetris_kind, tetris_hold, tetris_next[0:3];
   wire hold_locked, start, over;
@@ -43,7 +43,7 @@ module final_project import enum_type::*;
   wire t_spin;
 
   always_ff @(posedge clk)
-    if (~reset_n || ~during)
+    if (~reset_n || ~start)
         tetris_score <= 0;
     else
         tetris_score <= tetris_score + score_inc;
