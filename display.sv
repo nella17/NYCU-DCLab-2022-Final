@@ -154,15 +154,15 @@ module display import enum_type::*;
   end
 
   always @(posedge clk) begin
-    // if (~start)begin
-    //   if (start_region) pixel_addr <= interface_addr[0] + (pixel_x2_dd - 220) >> 1 + ((pixel_y2_dd -  174)) * INTERFACE_W;
-    //   else pixel_addr <= block_addr[10]; 
-    // end
+    if (~start)begin
+      if (start_region) pixel_addr <= interface_addr[0] + (pixel_x2_dd - 220) + ((pixel_y2_dd -  174)) * INTERFACE_W;
+      else pixel_addr <= block_addr[10]; 
+    end
 
-    // else if(over && end_region)begin
-    //   pixel_addr <= interface_addr[1] + (pixel_x2_dd - 220) >> 1 + ((pixel_y2_dd -  180)) * INTERFACE_W;
-    // end
-    if (inside_tetris) begin
+    else if(over && end_region)begin
+      pixel_addr <= interface_addr[1] + (pixel_x2_dd - 220) >> 1 + ((pixel_y2_dd -  180)) * INTERFACE_W;
+    end
+    else if (inside_tetris) begin
       case (kind)
         4'b0000: begin
           if (block_y == 0 || block_x == 0)
@@ -209,7 +209,9 @@ module display import enum_type::*;
       if (~hold_locked) pixel_addr <= block_addr[hold] + (block_hold_y)*BLOCK_W + block_hold_x;
       else pixel_addr <= block_addr[9] + (block_hold_y)*BLOCK_W + block_hold_x;
     end
-    else if (clock_region)
+    else if (clock_region && pixel_y2_dd > time_line) begin
+      pixel_addr <= block_addr[1];
+    end 
     else pixel_addr <= block_addr[0];
   end
 
@@ -229,16 +231,16 @@ module display import enum_type::*;
   end
 
   always @(posedge clk) begin
-    if (~reset_n || ~start) time_line <= 311;
-    else if (~start || ~over) time_line <= 434 - (count_down * 123)/COUNT_SEC;
+    if (~reset_n || ~start) time_line <= 117;
+    else if (~start || ~over) time_line <= 439 - (count_down * 322)/COUNT_SEC;
   end
 
   //area for tetris board
   assign inside_tetris = (220 <= pixel_x2_dd) & (pixel_x2_dd < 420) & (40 <= pixel_y2_dd) & (pixel_y2_dd < 440);
   //area for start/end
-  assign start_region = (220 <= pixel_x2_dd) & (pixel_x2_dd < 420) & (174 <= pixel_y2_dd) & (pixel_y2_dd < 306);
-  assign end_region = (220 <= pixel_x2_dd) & (pixel_x2_dd < 420) & (180 <= pixel_y2_dd) & (pixel_y2_dd < 300);
-  assign clock_region = (425 <= pixel_x2_dd) & (pixel_x2_dd < 477) & (311 <= pixel_y2_dd) & (pixel_y2_dd < 434);
+  assign start_region = (220 <= pixel_x2_dd) & (pixel_x2_dd < 420 - 100) & (174 <= pixel_y2_dd) & (pixel_y2_dd < 306 - 66);
+  assign end_region = (220 <= pixel_x2_dd) & (pixel_x2_dd < 420 - 100) & (180 <= pixel_y2_dd) & (pixel_y2_dd < 300 - 60);
+  assign clock_region = (189 <= pixel_x2_dd) & (pixel_x2_dd < 215) & (117 <= pixel_y2_dd) & (pixel_y2_dd < 439);
   //area for scoreboard
   assign inside_scoreboard[0] = (64 <= pixel_x_dd) & (pixel_x_dd < 69) & (225 <= pixel_y_dd) & (pixel_y_dd < 234);
   assign inside_scoreboard[1] = (71 <= pixel_x_dd) & (pixel_x_dd < 76) & (225 <= pixel_y_dd) & (pixel_y_dd < 234);
