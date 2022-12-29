@@ -96,12 +96,20 @@ module control import enum_type::*;
     else
       count_down <= count_down - (sec_cnt == SEC_TICK-1) + score_inc;
 
-  logic [2:0] score_pow = 1;
+  localparam SCORE_BIT = 4;
+
+  logic [4*4-1:0] score_pow_table [SCORE_BIT:0];
+  generate
+    for (gi = 0; gi <= 4; gi = gi + 1)
+        assign score_pow_table[gi] = 1 << gi;
+  endgenerate
+
+  logic [SCORE_BIT:0] score_pow = 1;
   always_ff @(posedge clk)
     if (~reset_n || ~during)
         score_pow <= 1;
     else
-        score_pow <= score_pow + (score >= (1 << score_pow));
+        score_pow <= score_pow + (score >= score_pow_table[score_pow]);
 
   always_ff @(posedge clk)
     if (~reset_n)
