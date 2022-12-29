@@ -69,10 +69,14 @@ module control import enum_type::*;
   // control
 
   logic [$clog2(SEC_TICK)+2:0] sec_cnt;
+  logic [$clog2(MSEC_TICK)+2:0] msec_cnt;
   logic [$clog2(DOWN_TICK)+2:0] down_cnt, down_tick;
   logic [$clog2(BAR_TICK)+2:0] bar_cnt;
   logic [$clog2(OVER_TICK)+2:0] over_cnt;
   state_type next = NONE;
+
+  logic sec_clk = sec_cnt == SEC_TICK-1;  
+  logic msec_clk = msec_cnt == MSEC_TICK-1;  
 
   always_ff @(posedge clk)
     if (~reset_n)
@@ -85,16 +89,24 @@ module control import enum_type::*;
   always_ff @(posedge clk)
     if (~reset_n || ~during)
       sec_cnt <= 0;
-    else if (sec_cnt == SEC_TICK-1)
+    else if (sec_clk)
       sec_cnt <= 0;
     else
       sec_cnt <= sec_cnt + 1;
 
   always_ff @(posedge clk)
+    if (~reset_n || ~during)
+      msec_cnt <= 0;
+    else if (msec_clk)
+      msec_cnt <= 0;
+    else
+      msec_cnt <= msec_cnt + 1;
+
+  always_ff @(posedge clk)
     if (~reset_n || ~start)
       count_down <= COUNT_SEC;
     else
-      count_down <= count_down - (sec_cnt == SEC_TICK-1) + score_inc;
+      count_down <= count_down - sec_clk+ score_inc;
 
   localparam SCORE_BIT = 4;
 
@@ -104,7 +116,7 @@ module control import enum_type::*;
     for (j = 0; j <= SCORE_BIT; j = j + 1)
         score_pow_table[j] = 1 << j;
 
-  logic [SCORE_BIT:0] score_pow = 1;
+  logic [SCORE_BIT:0] score_pow;
   always_ff @(posedge clk)
     if (~reset_n || ~during)
         score_pow <= 1;
@@ -126,7 +138,7 @@ module control import enum_type::*;
       else
         down_cnt <= down_cnt - down_tick;
     else
-      down_cnt <= down_cnt + 1;
+      down_cnt <= down_cnt + msec_clk;
 
   always_ff @(posedge clk)
     if (~reset_n || ~during)
