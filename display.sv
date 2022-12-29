@@ -61,6 +61,7 @@ module display import enum_type::*;
   assign sram_we = 0;         // MAY HAVE TROUBLE !!!!!!!
   assign sram_en = 1;          // Here, we always enable the SRAM block.
 
+  // region part variables
   wire  [11:0] boarder;
   wire inside_scoreboard[0:3];
   wire  [3:0] score_dec [0:3];
@@ -70,7 +71,12 @@ module display import enum_type::*;
   wire start_region;  //for start region
   wire end_region;
   wire clock_region;
-  reg [11:0] time_line;
+  reg  [11:0] time_line;
+  wire combo_region;
+  wire combo_number_region;
+  reg  [7:0] combo_number_x;
+  reg  [7:0] combo_number_y;
+  wire t_spin_region;
 
   reg  [11:0] rgb_reg;  // RGB value for the current pixel
   reg  [11:0] rgb_next; // RGB value for the next pixel
@@ -97,14 +103,27 @@ module display import enum_type::*;
   localparam INTERFACE_START_H = 66;
   localparam INTERFACE_END_H = 60;
   reg [17:0] interface_addr[0:1];
+  
+  localparam COM_W = 32;
+  localparam COM_H = 9;
+  localparam T_W = 6;
+  localparam T_H = 9;
+  reg [17:0] word_addr[0:1];
+  
   localparam GREEN = 1;
   
+  localparam DATA_SIZE = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*10 + 
+                         INTERFACE_W*INTERFACE_START_H + INTERFACE_W*INTERFACE_END_H + 
+                         COM_W*COM_H + T_W*T_H + GREEN*2;
+
   localparam [7:0]blockmask[0:7] = '{{8'b00000000}, {8'b11110000}, {8'b10001110}, {8'b00101110},
                                     {8'b01100110}, {8'b01101100}, {8'b01001110}, {8'b11000110}};
 
 
   initial begin
-    block_addr[0] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*10 + INTERFACE_W*INTERFACE_START_H + INTERFACE_W*INTERFACE_END_H;
+    block_addr[0] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*10 + 
+                    INTERFACE_W*INTERFACE_START_H + INTERFACE_W*INTERFACE_END_H +
+                    COM_W*COM_H + T_W*T_H;
     block_addr[1] = 18'd0;         /* Addr for block image #1 */
     block_addr[2] = BLOCK_W*BLOCK_H * 1;
     block_addr[3] = BLOCK_W*BLOCK_H * 2;
@@ -114,7 +133,9 @@ module display import enum_type::*;
     block_addr[7] = BLOCK_W*BLOCK_H * 6;
     block_addr[8] = BLOCK_W*BLOCK_H * 7;
     block_addr[9] = BLOCK_W*BLOCK_H * 8;
-    block_addr[10] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*10 + INTERFACE_W*INTERFACE_START_H + INTERFACE_W*INTERFACE_END_H + 1;
+    block_addr[10] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*10 + 
+                     INTERFACE_W*INTERFACE_START_H + INTERFACE_W*INTERFACE_END_H + 1 +
+                     COM_W*COM_H + T_W*T_H;
     
     num_addr[0] = BLOCK_W*BLOCK_H * 9 + 18'd0;         /* Addr for num image #1 */
     num_addr[1] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*1;
@@ -129,6 +150,12 @@ module display import enum_type::*;
 
     interface_addr[0] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*10;
     interface_addr[1] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*10 + INTERFACE_W*INTERFACE_START_H;
+
+    word_addr[0] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*10 + 
+                   INTERFACE_W*INTERFACE_START_H + INTERFACE_W*INTERFACE_END_H;
+    word_addr[1] = BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*10 + 
+                   INTERFACE_W*INTERFACE_START_H + INTERFACE_W*INTERFACE_END_H +
+                   COM_W*COM_H;
   end
 
   vga_sync_reg vs0(
@@ -146,7 +173,7 @@ module display import enum_type::*;
   sram #(.DATA_WIDTH(12), .ADDR_WIDTH(17), .RAM_SIZE(BG_W*BG_H), .FILE("images.mem"))
     ram0 (.clk(clk), .we(sram_we), .en(sram_en),
             .addr(bg_addr), .data_i(data_in), .data_o(bg_out));
-  sram #(.DATA_WIDTH(12), .ADDR_WIDTH(17), .RAM_SIZE(BLOCK_W*BLOCK_H * 9 + NUM_W*NUM_H*10 + INTERFACE_W*(INTERFACE_START_H + INTERFACE_END_H) + GREEN*2), .FILE("block_num.mem"))
+  sram #(.DATA_WIDTH(12), .ADDR_WIDTH(17), .RAM_SIZE(DATA_SIZE), .FILE("block_num.mem"))
     ram1 (.clk(clk), .we(sram_we), .en(sram_en),
             .addr(sram_addr), .data_i(data_in), .data_o(data_out));
 
@@ -164,9 +191,8 @@ module display import enum_type::*;
       if (start_region) pixel_addr <= interface_addr[0] + start_x + start_y * INTERFACE_W;
       else pixel_addr <= block_addr[10]; 
     end
-    else if(over)begin
-      if (end_region) pixel_addr <= interface_addr[1] + end_x + end_y * INTERFACE_W;
-      else pixel_addr <= block_addr[10];
+    else if(over && end_region)begin
+      pixel_addr <= interface_addr[1] + end_x + end_y * INTERFACE_W;
     end
     else if (inside_tetris) begin
       case (kind)
@@ -188,16 +214,16 @@ module display import enum_type::*;
       endcase
     end
     else if (inside_scoreboard[0]) begin
-      pixel_addr <= num_addr[score_dec[0]] + (pixel_x_dd - 64) + (pixel_y_dd - 225) * NUM_W;
+      pixel_addr <= num_addr[score_dec[0]] + (pixel_x_dd - 64) + (pixel_y_dd - 226) * NUM_W;
     end
     else if (inside_scoreboard[1]) begin
-      pixel_addr <= num_addr[score_dec[1]] + (pixel_x_dd - 71) + (pixel_y_dd - 225) * NUM_W;
+      pixel_addr <= num_addr[score_dec[1]] + (pixel_x_dd - 71) + (pixel_y_dd - 226) * NUM_W;
     end
     else if (inside_scoreboard[2]) begin
-      pixel_addr <= num_addr[score_dec[2]] + (pixel_x_dd - 78) + (pixel_y_dd - 225) * NUM_W;
+      pixel_addr <= num_addr[score_dec[2]] + (pixel_x_dd - 78) + (pixel_y_dd - 226) * NUM_W;
     end
     else if (inside_scoreboard[3]) begin
-      pixel_addr <= num_addr[score_dec[3]] + (pixel_x_dd - 85) + (pixel_y_dd - 225) * NUM_W;
+      pixel_addr <= num_addr[score_dec[3]] + (pixel_x_dd - 85) + (pixel_y_dd - 226) * NUM_W;
     end
     else if (inside_next[0] && blockmask[next[0]][mask_next_y*4 + mask_next_x]) begin
         pixel_addr <= block_addr[next[0]] + (block_next_y)*BLOCK_W + block_next_x;
@@ -218,6 +244,15 @@ module display import enum_type::*;
     else if (clock_region && pixel_y2_dd > time_line) begin
       pixel_addr <= block_addr[1];
     end 
+    else if (combo_region) begin
+      pixel_addr <= word_addr[0] + (pixel_x2_dd - 431) + (pixel_y2_dd - 320) * COM_W;
+    end
+    else if (combo_number_region) begin
+      pixel_addr <= num_addr[combo] + combo_number_x + combo_number_y * NUM_W;
+    end
+    else if (t_spin && t_spin_region) begin
+        pixel_addr <= word_addr[1] + (pixel_x_dd - 92) + (pixel_y_dd - 226) * T_W;
+    end
     else pixel_addr <= block_addr[0];
   end
 
@@ -241,6 +276,8 @@ module display import enum_type::*;
     start_y <= ((pixel_y2_d) - 174) >> 1;
     end_x <= ((pixel_x2_d) - 220) >> 1;
     end_y <= ((pixel_y2_d) - 180) >> 1;
+    combo_number_x <= (pixel_x2_d - 437) >> 2;
+    combo_number_y <= (pixel_y2_d - 344) >> 2;
   end
 
   always @(posedge clk) begin
@@ -255,10 +292,10 @@ module display import enum_type::*;
   assign end_region = (220 <= pixel_x2_dd) & (pixel_x2_dd < 420) & (180 <= pixel_y2_dd) & (pixel_y2_dd < 300);
   assign clock_region = (189 <= pixel_x2_dd) & (pixel_x2_dd < 215) & (117 <= pixel_y2_dd) & (pixel_y2_dd < 439);
   //area for scoreboard
-  assign inside_scoreboard[0] = (64 <= pixel_x_dd) & (pixel_x_dd < 69) & (225 <= pixel_y_dd) & (pixel_y_dd < 234);
-  assign inside_scoreboard[1] = (71 <= pixel_x_dd) & (pixel_x_dd < 76) & (225 <= pixel_y_dd) & (pixel_y_dd < 234);
-  assign inside_scoreboard[2] = (78 <= pixel_x_dd) & (pixel_x_dd < 83) & (225 <= pixel_y_dd) & (pixel_y_dd < 234);
-  assign inside_scoreboard[3] = (85 <= pixel_x_dd) & (pixel_x_dd < 90) & (225 <= pixel_y_dd) & (pixel_y_dd < 234);
+  assign inside_scoreboard[0] = (64 <= pixel_x_dd) & (pixel_x_dd < 69) & (226 <= pixel_y_dd) & (pixel_y_dd < 235);
+  assign inside_scoreboard[1] = (71 <= pixel_x_dd) & (pixel_x_dd < 76) & (226 <= pixel_y_dd) & (pixel_y_dd < 235);
+  assign inside_scoreboard[2] = (78 <= pixel_x_dd) & (pixel_x_dd < 83) & (226 <= pixel_y_dd) & (pixel_y_dd < 235);
+  assign inside_scoreboard[3] = (85 <= pixel_x_dd) & (pixel_x_dd < 90) & (226 <= pixel_y_dd) & (pixel_y_dd < 235);
   //area for next block
   assign inside_next[3] = (430 < pixel_x2_dd) & (470 > pixel_x2_dd) & (180 <= pixel_y2_dd) & (200 > pixel_y2_dd );
   assign inside_next[2] = (430 < pixel_x2_dd) & (470 > pixel_x2_dd) & (140 <= pixel_y2_dd) & (160 > pixel_y2_dd );
@@ -266,6 +303,10 @@ module display import enum_type::*;
   assign inside_next[0] = (430 < pixel_x2_dd) & (470 > pixel_x2_dd) & (60 <= pixel_y2_dd) & (80 > pixel_y2_dd );
   //area for hold
   assign inside_hold = (168 < pixel_x2_dd) & (208 > pixel_x2_dd) & (70 <= pixel_y2_dd) & (90 > pixel_y2_dd );
+  //area for combo
+  assign combo_region = (431 <= pixel_x2_dd) & (pixel_x2_dd < 463) & (320 <= pixel_y2_dd) & (pixel_y2_dd < 329);
+  assign combo_number_region = (437 <= pixel_x2_dd) & (pixel_x2_dd < 457) & (344 <= pixel_y2_dd) & (pixel_y2_dd < 380);
+  assign t_spin_region = (92 <= pixel_x_dd) & (pixel_x_dd < 98) & (226 <= pixel_y_dd) & (pixel_y_dd < 235);
 
   assign score_dec[3] = tetris_score[ 0+:4];
   assign score_dec[2] = tetris_score[ 4+:4];
