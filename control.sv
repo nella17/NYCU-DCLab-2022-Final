@@ -121,7 +121,7 @@ module control import enum_type::*;
     if (~reset_n)
       down_tick <= DOWN_TICK;
     else if (msec_clk)
-      down_tick <= down_tick - score_pow;
+      down_tick <= down_tick - (score_pow << 4);
 
   always_ff @(posedge clk)
     if (~reset_n || ~during)
