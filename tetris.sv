@@ -431,19 +431,28 @@ module tetris import enum_type::*;
       preview_mask <= preview_down_mask;
   end
 
-  reg is_rotate = 0;
+  reg [1:0] last_move [1:0];  // 0: DOWN, 1: ROTATE/ROTATE_REV, 2: other
   always @(posedge clk) begin
-    if (state == GEN)
-      is_rotate <= 0;
-    else if (state == WAIT && next_state != WAIT && next_state != BAR && next_state != DOWN)
-      is_rotate <= (next_state == ROTATE || next_state == ROTATE_REV);
+    if (state == GEN) begin
+      last_move[1] <= 2;
+      last_move[0] <= 2;
+    end
+    else if (state == WAIT && ctrl != NONE && ctrl != BAR) begin
+      last_move[1] <= last_move[0];
+      if (ctrl == DOWN)
+        last_move[0] <= 0;
+      else if (ctrl == ROTATE || ctrl == ROTATE_REV)
+        last_move[0] <= 1;
+      else
+        last_move[0] <= 2;
+    end
   end
 
   reg [2:0] lines_cleared = 0;
   reg [7:0] combo_score = 0;
   reg [7:0] score_pending = 0;
   reg [4:0] score_carry = 0;
-  wire t_spin_detected = is_rotate && (curr_kind == 6);
+  wire t_spin_detected = (last_move[1] == 1) && (last_move[0] == 0) && (curr_kind == 6);
   always_ff @(posedge clk) begin
     score_carry[0] <= 0;
     if (~reset_n || state == INIT) begin
@@ -457,8 +466,10 @@ module tetris import enum_type::*;
     end
     else if (state == BPLACE) begin
       lines_cleared <= 0;
-      if (lines_cleared == 0)
+      if (lines_cleared == 0) begin
         combo_score <= 0;
+        t_spin <= 0;
+      end
       else begin
         combo_score <= combo_score + 1;
         case (lines_cleared)
