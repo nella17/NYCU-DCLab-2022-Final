@@ -106,7 +106,7 @@ module control import enum_type::*;
     if (~reset_n || ~start)
       count_down <= COUNT_SEC;
     else
-      count_down <= count_down - sec_clk+ score_inc;
+      count_down <= count_down - sec_clk + score_inc;
 
   localparam SCORE_BIT = 4;
 
@@ -126,8 +126,8 @@ module control import enum_type::*;
   always_ff @(posedge clk)
     if (~reset_n || ~during)
       down_tick <= DOWN_TICK;
-    else if (msec_clk && down_tick >= MSEC_TICK)
-      down_tick <= down_tick - down_cut;
+    else if (down_tick >= MSEC_TICK && score_inc)
+      down_tick <= down_tick * 127 / 128;
 
   always_ff @(posedge clk)
     if (~reset_n || ~during)
