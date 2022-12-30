@@ -133,6 +133,4 @@ BPLACE --> GEN       : !boutside
 
 ### Display
 
-```mermaid
-graph TD;
-```
+![](./screenshot.jpeg)
